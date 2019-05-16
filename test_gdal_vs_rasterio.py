@@ -22,6 +22,11 @@ class TestStringMethods(unittest.TestCase):
 		tr = self.ds10r.transform
 		tr = tuple(tr)[:-3]
 		self.assertEqual(set(t), set(tr))
+		
+	def test_projection(self):
+		p = self.ds10.GetProjection()
+		pr = ds10r.crs.wkt
+		self.assertEqual(p, pr)
 
 
 	def test_array(self):
