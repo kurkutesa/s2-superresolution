@@ -2,6 +2,7 @@ from osgeo import gdal, osr
 import rasterio
 import unittest
 
+
 class TestStringMethods(unittest.TestCase):
 	def setUp(self):
 		self.ds10 = gdal.Open('10m.tiff')
