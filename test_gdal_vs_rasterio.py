@@ -25,7 +25,7 @@ class TestStringMethods(unittest.TestCase):
 		
 	def test_projection(self):
 		p = self.ds10.GetProjection()
-		pr = ds10r.crs.wkt
+		pr = self.ds10r.crs.wkt
 		self.assertEqual(p, pr)
 
 
