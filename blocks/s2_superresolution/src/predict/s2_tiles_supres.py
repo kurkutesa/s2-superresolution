@@ -65,23 +65,6 @@ parser.add_argument("--save_prefix", default="",
 args = parser.parse_args()
 globals().update(args.__dict__)
 
-# if list_output_file_formats:
-#    dcount = gdal.GetDriverCount()
-#    for didx in range(dcount):
-#        driver = gdal.GetDriver(didx)
-#        if driver:
-#            metadata = driver.GetMetadata()
-#        if (gdal.DCAP_CREATE in (driver and metadata) and metadata[gdal.DCAP_CREATE] == 'YES' and
-#        gdal.DCAP_RASTER in metadata and metadata[gdal.DCAP_RASTER] == 'YES'):
-#            name = driver.GetDescription()
-#            if "DMD_LONGNAME" in metadata:
-#                name += ": " + metadata["DMD_LONGNAME"]
-#            else:
-#                name = driver.GetDescription()
-#            if "DMD_EXTENSIONS" in metadata: name += " (" + metadata["DMD_EXTENSIONS"] + ")"
-#            print(name)
-#    sys.exit(0)
-
 if run_60:
     select_bands = 'B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12'
 else:
@@ -96,7 +79,7 @@ else:
     roi_lon1, roi_lat1, roi_lon2, roi_lat2 = -180, -90, 180, 90
 
 
-ds10 = rasterio.open('/Users/nikoo.ekhtiari/Documents/s2-superresolutioni/10m.tiff')
+ds10 = rasterio.open('/Users/nikoo.ekhtiari/Documents/s2-superresolution/10m.tiff')
 ds20 = rasterio.open('/Users/nikoo.ekhtiari/Documents/s2-superresolution/20m.tif')
 ds60 = rasterio.open('/Users/nikoo.ekhtiari/Documents/s2-superresolution/60m.tif')
 
@@ -129,45 +112,6 @@ if roi_x_y:
 else:
     xmin, ymin, xmax, ymax = (0, 0, ds10.width, ds10.height)
 
-#     else:
-#         xoff, a, b, yoff, d, e = ds.GetGeoTransform()
-#         srs = osr.SpatialReference()
-#         srs.ImportFromWkt(ds.GetProjection())
-#         srsLatLon = osr.SpatialReference()
-#         srsLatLon.SetWellKnownGeogCS("WGS84");
-#         ct = osr.CoordinateTransformation(srsLatLon, srs)
-#
-#
-#         def to_xy(lon, lat):
-#             (xp, yp, h) = ct.TransformPoint(lon, lat, 0.)
-#             xp -= xoff
-#             yp -= yoff
-#             # matrix inversion
-#             det_inv = 1. / (a * e - d * b)
-#             x = (e * xp - b * yp) * det_inv
-#             y = (-d * xp + a * yp) * det_inv
-#             return (int(x), int(y))
-#
-#
-#         x1, y1 = to_xy(roi_lon1, roi_lat1)
-#         x2, y2 = to_xy(roi_lon2, roi_lat2)
-
-#     area = (tmxmax - tmxmin + 1) * (tmymax - tmymin + 1)
-#     print(area)
-#     current_utm = dsdesc[dsdesc.find("UTM"):]
-#     if area > all_utms[current_utm]:
-#         all_utms[current_utm] = area
-#     if current_utm == select_UTM:
-#         xmin, ymin, xmax, ymax = tmxmin, tmymin, tmxmax, tmymax
-#         utm_idx = tmidx
-#         utm = current_utm
-#         break
-#     if area > largest_area:
-#         xmin, ymin, xmax, ymax = tmxmin, tmymin, tmxmax, tmymax
-#         largest_area = area
-#         utm_idx = tmidx
-#         utm = dsdesc[dsdesc.find("UTM"):]
-# print(area)
 
 utm = 'UTM 39N'
 if list_UTM:
@@ -254,12 +198,6 @@ sys.stdout.write("\n")
 if list_bands:
     sys.exit(0)
 
-# All query options are processed, we now require an output file
-#if not output_file:
-#    print("Error: you must provide the name of an output file. I will set it identical to the input...")
-#    output_file = os.path.split(data_file)[1] + '.tif'
-    # sys.exit(1)
-
 output_file = save_prefix + output_file
 # Some HDR restrictions... ENVI file name should be the .bin, not the .hdr
 if output_file_format == 'ENVI' and (output_file[-4:] == '.hdr' or output_file[-4:] == '.HDR'):
@@ -300,38 +238,6 @@ if sr20 is None:
     print("No super-resolution performed, exiting")
     sys.exit(0)
 
-# if output_file_format != "npz":
-#    revert_to_npz = True
-#    driver = gdal.GetDriverByName(output_file_format)
-#    if driver:
-#        metadata = driver.GetMetadata()
-#        if gdal.DCAP_CREATE in metadata and metadata[gdal.DCAP_CREATE] == 'YES':
-#            revert_to_npz = False
-#    if revert_to_npz:
-#        print("Gdal doesn't support creating %s files" % output_file_format)
-#        print("Writing to npz as a fallback")
-#        output_file_format = "npz"
-#    bands = None
-#else:
-#    bands = dict()
-#    result_dataset = None
-
-#bidx = 0
-#all_descriptions = []
-#source_band = dict()
-
-
-#def write_band_data(data, description, name=None):
-#    global all_descriptions
-#    global bidx
-#    all_descriptions += [description]
-#    if output_file_format == "npz":
-#        bands[description] = data
-#    else:
-#        bidx += 1
-#        result_dataset.GetRasterBand(bidx).SetDescription(description)
-#        result_dataset.GetRasterBand(bidx).WriteArray(data)
-
 
 if sr60 is not None:
     sr = np.concatenate((sr20, sr60), axis=2)
@@ -346,8 +252,6 @@ else:
     out_dims = sr.shape[2]
 
 sys.stdout.write("Writing")
-# result_dataset = driver.Create(output_file, data10.shape[1], data10.shape[0], out_dims, gdal.GDT_Float64)
-
 print(" the super-resolved bands in %s" % output_file)
 profile = ds10.profile
 with rasterio.open('/tmp/example.tif', 'w' ,**profile) as ds10w:
@@ -356,27 +260,7 @@ with rasterio.open('/tmp/example.tif', 'w' ,**profile) as ds10w:
         ds10w.write(sr20[:,:,bi], indexes=bi+1)
 
 
-# Translate the image upper left corner. We multiply x10 to transform from pixel position in the 10m_band to meters.
-# geot = list(ds10.GetGeoTransform())
-# geot[0] += xmin * 10
-# geot[3] -= ymin * 10
-# result_dataset.SetGeoTransform(tuple(geot))
-# result_dataset.SetProjection(ds10.GetProjection())
-
-# result_dataset.(ds10.crs.wkt)
-
-# if copy_original_bands:
-#    sys.stdout.write(" the original 10m bands and")
-    # Write the original 10m bands
-#    for bi, bn in enumerate(validated_10m_bands):
-#        write_band_data(data10[:, :, bi], validated_descriptions_all[bn])
-
 print(" the super-resolved bands in %s" % output_file)
-# for bi, bn in enumerate(validated_sr_bands):
-#    write_band_data(sr[:, :, bi], "SR" + validated_descriptions_all[bn], "SR" + bn)
-
-# for desc in all_descriptions:
-#    print(desc)
 
 if output_file_format == "npz":
     np.savez(output_file, bands=bands)
