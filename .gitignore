@@ -1,4 +1,5 @@
 *.tif
+*.tiff
 __pycache__
 .idea
 DS_Store
