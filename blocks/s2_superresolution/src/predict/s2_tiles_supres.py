@@ -9,6 +9,7 @@ from collections import defaultdict
 import numpy as np
 import rasterio
 from rasterio.windows import Window
+import pyproj as proj
 from supres import DSen2_20, DSen2_60
 
 # from osgeo import gdal, osr
