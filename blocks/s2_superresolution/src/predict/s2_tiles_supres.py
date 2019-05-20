@@ -106,12 +106,29 @@ def get_max_min(x1, y1, x2, y2):
     return tmxmin,tmymin,tmxmax,tmymax, area
 
 
+def to_xy(lon, lat):
+    crs_wgs = proj.Proj(init='epsg:4326')
+    crs_bng = proj.Proj(init='epsg:32639')
+    xp, yp = proj.transform(crs_wgs, crs_bng, lon, lat)
+    xp -= xoff
+    yp -= yoff
+    # matrix inversion
+    det_inv = 1. / (a * e - d * b)
+    x = (e * xp - b * yp) * det_inv
+    y = (-d * xp + a * yp) * det_inv
+    return (int(x), int(y))
+
+
 if roi_x_y:
     roi_x1, roi_y1, roi_x2, roi_y2 = [float(x) for x in re.split(',', roi_x_y)]
     xmin, ymin, xmax, ymax, area = get_max_min(roi_x1,roi_y1, roi_x2, roi_y2)
-else:
+elif not roi_lon_lat:
     xmin, ymin, xmax, ymax = (0, 0, ds10.width, ds10.height)
-
+else:
+    a, b,xoff, d, e, yoff = ds10.transform
+    x1, y1 = to_xy(roi_lon1, roi_lat1)
+    x2, y2 = to_xy(roi_lon2, roi_lat2)
+    xmin, ymin, xmax, ymax, area = get_max_min(x1, y1, x2, y2)
 
 utm = 'UTM 39N'
 if list_UTM:
