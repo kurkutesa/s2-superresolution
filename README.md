@@ -124,7 +124,6 @@ Learn more about creating and publishing blocks by reading our
       [gitter](https://gitter.im/up42-com/community).
  3. Mail us [support@up42.com](mailto:support@up42.com).
 
-## TODO
  
 
 
