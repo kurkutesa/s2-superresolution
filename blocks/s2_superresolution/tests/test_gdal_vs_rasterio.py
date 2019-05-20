@@ -1,7 +1,8 @@
-from osgeo import gdal, osr
+from osgeo import gdal
 import rasterio
 import unittest
-
+import re
+import sys
 from collections import defaultdict
 
 
@@ -23,6 +24,7 @@ def validate(data):
     validated_bands = []
     validated_indices = []
     validated_descriptions = defaultdict(str)
+    select_bands = ['B2', 'B3', 'B4', 'B5', 'B6', 'B7', 'B8', 'B8A', 'B11', 'B12']
     for b in range(0, data.count):
         desc = validate_description(data.descriptions[b])
         name = get_band_short_name(desc)
@@ -36,44 +38,43 @@ def validate(data):
 
 
 class TestStringMethods(unittest.TestCase):
-	def setUp(self):
-		self.ds10 = gdal.Open('10m.tiff')
-		self.ds10r = rasterio.open('10m.tiff')
+    def setUp(self):
+        self.ds10 = gdal.Open('/Users/nikoo.ekhtiari/Documents/s2-superresolution/10m.tiff')
+        self.ds10r = rasterio.open('/Users/nikoo.ekhtiari/Documents/s2-superresolution/10m.tiff')
 
-	def test_description(self):
-		d = self.ds10r.descriptions
-		self.assertEqual(self.ds10.GetRasterBand(1).GetDescription(), d[0])
+    def test_description(self):
+        d = self.ds10r.descriptions
+        self.assertEqual(self.ds10.GetRasterBand(1).GetDescription(), d[0])
 
-	def test_rastersize(self):
-		self.assertEqual(self.ds10.RasterXSize, self.ds10r.width)
-		self.assertEqual(self.ds10.RasterYSize, self.ds10r.height)
-
-
-	def test_transfrom(self):
-		t = self.ds10.GetGeoTransform()
-		tr = self.ds10r.transform
-		tr = tuple(tr)[:-3]
-		self.assertEqual(set(t), set(tr))
-		
-	def test_projection(self):
-		p = self.ds10.GetProjection()
-		pr = self.ds10r.crs.wkt
-		self.assertEqual(p, pr)
+    def test_rastersize(self):
+        self.assertEqual(self.ds10.RasterXSize, self.ds10r.width)
+        self.assertEqual(self.ds10.RasterYSize, self.ds10r.height)
 
 
-	def test_array(self):
-		data10 = self.ds10.ReadAsArray()
-		data10r = self.ds10r.read()
-		self.assertEqual(data10.all(), data10r.all())
+    def test_transfrom(self):
+        t = self.ds10.GetGeoTransform()
+        tr = self.ds10r.transform
+        tr = tuple(tr)[:-3]
+        self.assertEqual(set(t), set(tr))
 
-	def test_desc(self):
-		validated_10m_indices_exm = [0, 1, 2, 3]
-		validated_10m_bands_exm = ['B2', 'B3', 'B4', 'B8']
+    def test_projection(self):
+        p = self.ds10.GetProjection()
+        pr = self.ds10r.crs.wkt
+        self.assertEqual(p, pr)
 
-		validated_10m_bands, validated_10m_indices, dic_10m = validate(self.ds10r)
-		self.assertEqual(validated_10m_bands, validated_10m_bands_exm)
-		self.assertEqual(validated_10m_indices, validated_10m_indices_exm)
+
+    def test_array(self):
+        data10 = self.ds10.ReadAsArray()
+        data10r = self.ds10r.read()
+        self.assertEqual(data10.all(), data10r.all())
+
+    def test_desc(self):
+        validated_10m_indices_exm = [0, 1, 2, 3]
+        validated_10m_bands_exm = ['B2', 'B3', 'B4', 'B8']
+        validated_10m_bands, validated_10m_indices, dic_10m = validate(self.ds10r)
+        self.assertEqual(set(validated_10m_bands), set(validated_10m_bands_exm))
+        self.assertEqual(validated_10m_indices, validated_10m_indices_exm)
 
 
 if __name__ == '__main__':
-	unittest.main()
+    unittest.main()

@@ -9,8 +9,7 @@ from utils.patches import get_test_patches, get_test_patches60, recompose_images
 
 
 SCALE = 2000
-# MDL_PATH = '../models/'
-MDL_PATH = '/Users/nikoo.ekhtiari/Documents/s2-superresolution/models/'
+MDL_PATH = '/Users/nikoo.ekhtiari/Documents/s2-superresolution/blocks/s2_superresolution/weights/'
 
 def DSen2_20(d10, d20, deep=False):
     # Input to the funcion must be of shape:

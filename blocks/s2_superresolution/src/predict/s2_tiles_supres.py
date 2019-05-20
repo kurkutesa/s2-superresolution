@@ -96,9 +96,9 @@ else:
     roi_lon1, roi_lat1, roi_lon2, roi_lat2 = -180, -90, 180, 90
 
 
-ds10 = rasterio.open('10m.tiff')
-ds20 = rasterio.open('20m.tif')
-ds60 = rasterio.open('60m.tif')
+ds10 = rasterio.open('/Users/nikoo.ekhtiari/Documents/s2-superresolutioni/10m.tiff')
+ds20 = rasterio.open('/Users/nikoo.ekhtiari/Documents/s2-superresolution/20m.tif')
+ds60 = rasterio.open('/Users/nikoo.ekhtiari/Documents/s2-superresolution/60m.tif')
 
 # case where we have several UTM in the data set
 # => select the one with maximal coverage of the study zone
