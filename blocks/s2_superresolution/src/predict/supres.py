@@ -1,7 +1,3 @@
-from __future__ import division
-# import numpy as np
-# import argparse
-# from skimage.transform import resize
 import sys
 sys.path.append('../')
 from utils.DSen2Net import s2model
@@ -9,14 +5,19 @@ from utils.patches import get_test_patches, get_test_patches60, recompose_images
 
 
 SCALE = 2000
-MDL_PATH = '/Users/nikoo.ekhtiari/Documents/s2-superresolution/blocks/s2_superresolution/weights/'
+MDL_PATH = '../../weights/'
 
 def DSen2_20(d10, d20, deep=False):
-    # Input to the funcion must be of shape:
-    #     d10: [x,y,4]      (B2, B3, B4, B8)
-    #     d20: [x/2,y/4,6]  (B5, B6, B7, B8a, B11, B12)
-    #     deep: specifies whether to use VDSen2 (True), or DSen2 (False)
+    """
+    This methods uses a convolutional neural network created from the _predict method to obtain a 10m resolution
+    image from a 20m resolution.
 
+    :param d10: The numpy array of pixels's value for 10m resolution.
+    :param d20: The numpy array of pixels's value for 20m resolution.
+    :param deep: If true, 32 would be the number of resBlocks used in the model and 256
+    would be the number of filters used to scan the image to create feature maps.
+    :return: The predicted high resolution (10 m) image.
+    """
     border = 8
     p10, p20 = get_test_patches(d10, d20, patchSize=128, border=border)
     p10 /= SCALE
@@ -30,12 +31,17 @@ def DSen2_20(d10, d20, deep=False):
 
 
 def DSen2_60(d10, d20, d60, deep=False):
-    # Input to the funcion must be of shape:
-    #     d10: [x,y,4]      (B2, B3, B4, B8)
-    #     d20: [x/2,y/4,6]  (B5, B6, B7, B8a, B11, B12)
-    #     d60: [x/6,y/6,2]  (B1, B9) -- NOT B10
-    #     deep: specifies whether to use VDSen2 (True), or DSen2 (False)
+    """
+    This methods uses a convolutional neural network created from the _predict method to obtain a 10m resolution
+    image based on 20m and 60m resolution images.
 
+    :param d10: The numpy array of pixels's value for 10m resolution.
+    :param d20: The numpy array of pixels's value for 20m resolution.
+    :param d60: The numpy array of pixels's value for 60m resolution.
+    :param deep: If true, 32 would be the number of resBlocks used in the model and 256
+    would be the number of filters used to scan the image to create feature maps.
+    :return: The predicted high resolution (10 m) image.
+    """
     border = 12
     p10, p20, p60 = get_test_patches60(d10, d20, d60, patchSize=192, border=border)
     p10 /= SCALE

@@ -2,5 +2,5 @@
 *.tiff
 __pycache__
 .idea
-DS_Store
+.DS_Store
 *.pyc
