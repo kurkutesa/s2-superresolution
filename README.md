@@ -44,8 +44,19 @@ git clone https://github.com/up42/s2-superresolutiongit <directory>
 
 then do `cd <directory>`.
 #### Install the required libraries
+First create a virtual environment either by using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) 
+or [virtualenv](https://virtualenv.pypa.io/en/latest/).
+In the case of using the virtualenvwrapper do:
 
-All the necessary libraries can be installed on your local machine by doing:
+```mkvirtualenv --python=$(which python3.7) up42-supres```
+
+In the case of using the virtualenv do:
+
+````
+virtualenv -p $(which python3.7) up42-supres
+````
+
+After creating a virtual environment and activating it, all the necessary libraries can be installed on this environment by doing:
 
 ```bash
 ./blocks/s2_superresolution/setup.sh
