@@ -7,6 +7,7 @@ from collections import defaultdict
 import numpy as np
 import rasterio
 from rasterio.windows import Window
+from rasterio import Affine as A
 import pyproj as proj
 from supres import DSen2_20, DSen2_60
 from helper import get_logger
@@ -142,7 +143,7 @@ def to_xy(lon, lat):
 
 if roi_x_y:
     roi_x1, roi_y1, roi_x2, roi_y2 = [float(x) for x in re.split(',', roi_x_y)]
-    xmin, ymin, xmax, ymax, area = get_max_min(roi_x1,roi_y1, roi_x2, roi_y2)
+    xmin, ymin, xmax, ymax, area = get_max_min(roi_x1, roi_y1, roi_x2, roi_y2)
 elif not roi_lon_lat:
     xmin, ymin, xmax, ymax = (0, 0, ds10.width, ds10.height)
 else:
@@ -247,7 +248,7 @@ def validate(data):
         desc = validate_description(data.descriptions[b])
         name = get_band_short_name(desc)
         if name in select_bands:
-            logger.info(" " + name)
+            #logger.info(" " + name)
             select_bands.remove(name)
             validated_bands += [name]
             validated_indices += [b]
@@ -335,12 +336,25 @@ else:
 logger.info("Writing")
 logger.info(" the super-resolved bands in")
 logger.info(output_file)
-profile = ds20.profile
-profile.update(dtype=rasterio.float32)
-profile.update(driver='GTiff')
-with rasterio.open(os.path.join(OUTPUT_DIR, output_file), 'w' ,**profile) as ds20w:
+
+
+def update(data):
+    p = data.profile
+    new_transform = p['transform'] * A.translation(xmin, ymin)
+    p.update(dtype=rasterio.float32)
+    p.update(driver='GTiff')
+    p.update(width=data10.shape[1])
+    p.update(height=data10.shape[0])
+    p.update(count=out_dims)
+    p.update(transform=new_transform)
+    return p
+
+
+profile = update(ds10)
+
+with rasterio.open(os.path.join(OUTPUT_DIR, output_file), 'w' ,**profile) as ds10w:
     for bi, bn in enumerate(validated_sr_bands):
-        ds20w.write(sr20[:,:,bi], indexes=bi+1)
+        ds10w.write(sr20[:,:,bi], indexes=bi+1)
 
 
 if output_file_format == "npz":
