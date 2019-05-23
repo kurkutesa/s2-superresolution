@@ -339,6 +339,11 @@ logger.info(output_file)
 
 
 def update(data):
+    """
+    This method creates the proper georeferencing for the output image.
+    :param data: The raster file for 10m resolution.
+
+    """
     p = data.profile
     new_transform = p['transform'] * A.translation(xmin, ymin)
     p.update(dtype=rasterio.float32)
