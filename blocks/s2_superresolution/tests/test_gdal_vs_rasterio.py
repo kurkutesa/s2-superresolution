@@ -7,6 +7,7 @@ from collections import defaultdict
 import glob
 import os
 
+
 def validate_description(description):
     """
     This method rewrites the description of each band in the given data set.
@@ -23,6 +24,7 @@ def validate_description(description):
     if m:
         return m.group(1) + " (" + m.group(2) + " nm)"
     return description
+
 
 def get_band_short_name(description):
     """
