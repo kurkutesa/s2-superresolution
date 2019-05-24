@@ -43,14 +43,45 @@ git clone https://github.com/up42/s2-superresolutiongit <directory>
 ``` 
 
 then do `cd <directory>`.
+#### Install the required libraries
+First create a virtual environment either by using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) 
+or [virtualenv](https://virtualenv.pypa.io/en/latest/).
+In the case of using the virtualenvwrapper do:
+
+```mkvirtualenv --python=$(which python3.7) up42-supres```
+
+In the case of using the virtualenv do:
+
+````
+virtualenv -p $(which python3.7) up42-supres
+````
+
+After creating a virtual environment and activating it, all the necessary libraries can be installed on this environment by doing:
+
+```bash
+./blocks/s2_superresolution/setup.sh
+```
+#### Create the super resolution image using the trained network
+
+The trained network can be used directly on downloaded Sentinel-2 tiles. for more details, see in the s2_tiles_supres.py file.
+ An example follows:
+
+```python s2_tiles_supres.py /path/to/S2A_MSIL1C_20161230T074322_N0204_R092_T37NCE_20161230T075722.SAFE/MTD_MSIL1C.xml output_file.tif --roi_x_y "100,100,2000,2000"```
+
+Use the .xml file of the uzipped S2 tile. You must also provide an output image with a `.tif` extension which is easily read by QGIS.
+Also create a `/tmp/output/` so that the output image will be written into this directory.
+If you want to also copy the high resolution (10m bands) you can do so, with the option `--copy_original_bands`.
+To also predict the lowest resolution bands (60m) use the `--run_60` option.
+
 
 #### Run the tests
 
-This project uses [pytest](https://pytest.org/) for testing. To run
-the tests do:
+This project uses [unittest](https://docs.python.org/3/library/unittest.html) for testing. To run
+the tests first create a `/tmp/input/` directory and place the `.SAFE` file of your image in this directory. 
+Therefore the input image will be read from the `/tmp/input/` directory. Then do as following:
 
 ```bash
-./blocks/2-superresolutiontest.sh
+./blocks/s2-superresolution/test.sh
 ```
 
 from the repository top directory.
@@ -124,7 +155,6 @@ Learn more about creating and publishing blocks by reading our
       [gitter](https://gitter.im/up42-com/community).
  3. Mail us [support@up42.com](mailto:support@up42.com).
 
-## TODO
  
 
 
