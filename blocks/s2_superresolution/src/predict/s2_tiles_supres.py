@@ -1,4 +1,3 @@
-import argparse
 import re
 import sys
 import os
@@ -14,44 +13,13 @@ from rasterio.windows import Window
 from rasterio import Affine as A
 import pyproj as proj
 from supres import DSen2_20, DSen2_60
-from helper import get_logger, load_metadata, save_result, AOICLIPPED
+from helper import get_logger, load_metadata, load_params, save_result, SENTINEL2_L1C
 
 logger = get_logger(__name__)
 
 # This code is adapted from this repository http://nicolas.brodu.net/code/superres and is distributed under the same
 # license.
 
-parser = argparse.ArgumentParser(description="Perform super-resolution on Sentinel-2 with DSen2. Code based on superres"
-                                             " by Nicolas Brodu.",
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("--roi_lon_lat", default="",
-                    help="Sets the region of interest to extract, WGS84, decimal notation. Use this syntax: lon_1,"
-                         "lat_1,lon_2,lat_2. The order of points 1 and 2 does not matter: the region of interest "
-                         "extends to the min/max in each direction. "
-                         "Example: --roi_lon_lat=-1.12132,44.72408,-0.90350,44.58646")
-parser.add_argument("--roi_x_y", default="",
-                    help="Sets the region of interest to extract as pixels locations on the 10m bands. Use this "
-                         "syntax: x_1,y_1,x_2,y_2. The order of points 1 and 2 does not matter: the region of interest "
-                         "extends to the min/max in each direction and to nearby 60m pixel boundaries.")
-parser.add_argument("--list_bands", action="store_true",
-                    help="List bands in the input file subdata set matching the selected UTM zone, and exit.")
-parser.add_argument("--run_60", action="store_true",
-                    help="Select which bands to process and include in the output file. If this flag is set it will "
-                         "super-resolve the 20m and 60m bands (B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12). If it is not "
-                         "set it will only super-resolve the 20m bands (B2,B3,B4,B5,B6,B7,B8,B8A,B11,B12). Band B10 "
-                         "is to noisy and is not super-resolved.")
-parser.add_argument("--list_UTM", action="store_true",
-                    help="List all UTM zones present in the input file, together with their coverage of the ROI in "
-                         "10m x 10m pixels.")
-parser.add_argument("--select_UTM", default="",
-                    help="Select a UTM zone. The default is to select the zone with the largest coverage of the ROI.")
-parser.add_argument("--copy_original_bands", action="store_true",
-                    help="The default is not to copy the original selected 10m bands into the output file in addition "
-                         "to the super-resolved bands. If this flag is used, the output file may be used as a 10m "
-                         "version of the original Sentinel-2 file.")
-
-args = parser.parse_args()
-globals().update(args.__dict__)
 
 OUTPUT_DIR = '/tmp/output/'
 INPUT_DIR = '/tmp/input/'
@@ -66,7 +34,7 @@ def get_data(input_dir):
     """
     input_metadata = load_metadata()
     for feature in input_metadata.features:
-        path_to_input_img = feature["properties"][AOICLIPPED]
+        path_to_input_img = feature["properties"][SENTINEL2_L1C]
         path_to_output_img = Path(path_to_input_img).stem + '_superresolution.tif'
         out_feature = feature.copy()
         out_feature["properties"]["custom.processing.superresolution"] = path_to_output_img
@@ -144,21 +112,24 @@ def to_xy(lon, lat, data):
     return int(x), int(y)
 
 
+params = load_params()  # type: dict
+
+
 def area_of_interest():
     """
     This method returns the coordinates that define the desired area of interest.
 
     """
-    if roi_x_y:
-        roi_x1, roi_y1, roi_x2, roi_y2 = [float(x) for x in re.split(',', roi_x_y)]
+    if 'roi_x_y' in [*params]:
+        roi_x1, roi_y1, roi_x2, roi_y2 = params.get('roi_x_y')['default']
         xmi, ymi, xma, yma, area = get_max_min(roi_x1, roi_y1, roi_x2, roi_y2)
-    elif roi_lon_lat:
-        roi_lon1, roi_lat1, roi_lon2, roi_lat2 = [float(x) for x in re.split(',', roi_lon_lat)]
+    elif 'roi_lon_lat' in [*params]:
+        roi_lon1, roi_lat1, roi_lon2, roi_lat2 = params.get('roi_lon_lat')['default']
         x1, y1 = to_xy(roi_lon1, roi_lat1, ds10)
         x2, y2 = to_xy(roi_lon2, roi_lat2, ds10)
         xmi, ymi, xma, yma, area = get_max_min(x1, y1, x2, y2)
     else:
-        xmi, ymi, xma, yma = (0, 0, ds10.width, ds10.height)
+        xmi, ymi, xma, yma, area = (0, 0, ds10.width, ds10.height, ds10.width * ds10.height)
 
     return xmi, ymi, xma, yma, area
 
@@ -197,19 +168,6 @@ def validate_description(description):
     if m:
         return m.group(1) + " (" + m.group(2) + " nm)"
     return description
-
-
-if list_bands:
-    logger.info("\n10m bands:")
-    for b in range(0, ds10.count):
-        logger.info("- " + validate_description(ds10.descriptions[b]))
-    logger.info("\n20m bands:")
-    for b in range(0, ds20.count):
-        print("- " + validate_description(ds20.descriptions[b]))
-    logger.info("\n60m bands:")
-    for b in range(0, ds60.count):
-        logger.info("- " + validate_description(ds60.descriptions[b]))
-    logger.info("")
 
 
 def get_band_short_name(description):
@@ -255,13 +213,13 @@ def validate(data):
     validated_bands = []
     validated_indices = []
     validated_descriptions = defaultdict(str)
-    for b in range(0, data.count):
-        desc = validate_description(data.descriptions[b])
+    for i in range(0, data.count):
+        desc = validate_description(data.descriptions[i])
         name = get_band_short_name(desc)
         if name in select_bands:
             select_bands.remove(name)
             validated_bands += [name]
-            validated_indices += [b]
+            validated_indices += [i]
             validated_descriptions[name] = desc
     return validated_bands, validated_indices, validated_descriptions
 
@@ -329,7 +287,7 @@ def run_model(d1, d2, d6):
 sr, validated_sr_bands, shape_10m = run_model(ds10, ds20, ds60)
 
 
-if copy_original_bands:
+if params['copy_original_bands']['default'] == 'yes':
     out_dims = shape_10m[2] + sr.shape[2]
 else:
     out_dims = sr.shape[2]
@@ -357,6 +315,6 @@ def update(data):
 
 profile = update(ds10)
 filename = os.path.join(OUTPUT_DIR, output_name)
-save_result(sr, validated_sr_bands, profile, output_jsonfile, OUTPUT_DIR, filename)
+save_result(sr, validated_sr_bands, validated_descriptions_all, profile, output_jsonfile, OUTPUT_DIR, filename)
 
 

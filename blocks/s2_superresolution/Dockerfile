@@ -6,8 +6,8 @@ FROM tensorflow/tensorflow:1.13.1-py3
 
 # The manifest file contains metadata for correctly building and
 # tagging the Docker image. This is a build time argument.
-# ARG manifest
-# LABEL "up42_manifest"=$manifest
+ARG manifest
+LABEL "up42_manifest"=$manifest
 
 # Working directory setup.
 WORKDIR /block
@@ -21,5 +21,4 @@ COPY src /block/src
 COPY weights /block/weights
 
 # Invoke run.py.
-# CMD ["python", "/block/src/predict/s2_tiles_supres.py"]
-ENTRYPOINT ["python", "/block/src/predict/s2_tiles_supres.py"]
+CMD ["python", "/block/src/predict/s2_tiles_supres.py"]
