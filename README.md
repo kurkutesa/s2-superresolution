@@ -18,7 +18,7 @@ description in terms of the UP42 core concepts.
 
 * Block type: processing
 * Supported input types:
-  * [AOIClipped](https://specs.up42.com/v1/blocks/schema.json) 
+  * [SENTINEL2_L1C](https://specs.up42.com/v1/blocks/schema.json) 
   (any geo-referenced [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF))
 * Provider: [UP42](https://up42.com)
 * Tags: machine learning, data processing, analytics
@@ -64,20 +64,19 @@ After creating a virtual environment and activating it, all the necessary librar
 #### Create the super resolution image using the trained network
 
 The trained network can be used directly on downloaded Sentinel-2 tiles. for more details, see in the s2_tiles_supres.py file.
- An example follows:
 
-```python s2_tiles_supres.py /path/to/S2A_MSIL1C_20161230T074322_N0204_R092_T37NCE_20161230T075722.SAFE/MTD_MSIL1C.xml output_file.tif --roi_x_y "100,100,2000,2000"```
 
-Use the .xml file of the uzipped S2 tile. You must also provide an output image with a `.tif` extension which is easily read by QGIS.
-Also create a `/tmp/output/` so that the output image will be written into this directory.
-If you want to also copy the high resolution (10m bands) you can do so, with the option `--copy_original_bands`.
-To also predict the lowest resolution bands (60m) use the `--run_60` option.
+The code use the .xml file of the uzipped S2 tile. The output image will be saved with a `.tif` extension which is easily readable by QGIS.
+You need to create a `/tmp/output/` so that the output image will be written into this directory.
+If you want to also copy the original high resolution (10m bands) you can do so, with tuning the parameter `copy_original_bands` in the Up42Manifest.json and choose default to be `yes`.
+The source code also predict the lowest resolution bands (60m) by default, so that the output image will include high resolution (10m) for all the exiting bands
+within 20m and 60m resolutions.
 
 
 #### Run the tests
 
 This project uses [unittest](https://docs.python.org/3/library/unittest.html) for testing. To run
-the tests first create a `/tmp/input/` directory and place the `.SAFE` file of your image in this directory. 
+the tests first create a `/tmp/input/` directory and place your image containing the `.SAFE` file in this directory. 
 Therefore the input image will be read from the `/tmp/input/` directory. Then do as following:
 
 ```bash
@@ -102,8 +101,8 @@ cd -
 
 #### Run the processsing block 
 
- * Create the block input `/tmp/input` and output directories `/tmp/output`.
- * Copy the input data (along with the
+ * Make sure you have created the block input `/tmp/input` and output directories `/tmp/output`.
+ * Copy the input data form the unzipped s2 file (along with the
    [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) file called
    `data.json`) to `/tmp/input`.
  * Build the docker image as outlined above.
