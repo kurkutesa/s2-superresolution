@@ -6,3 +6,4 @@ rasterio
 scikit-image
 imageio
 pyproj
+geojson

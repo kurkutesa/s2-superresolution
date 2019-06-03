@@ -119,8 +119,8 @@ class TestStringMethods(unittest.TestCase):
         validated_10m_bands_exm = ['B2', 'B3', 'B4', 'B8']
         # validated_20m_indices_exm = [0, 1, 2, 3, 4, 5]
         # validated_20m_bands_exm = ['B5', 'B6', 'B7', 'B8A', 'B11', 'B12']
-        # validated_60m_indices_exm = [0, 1, 2]
-        # validated_60m_bands_exm = ['B1', 'B9', 'B10']
+        # validated_60m_indices_exm = [0, 1]
+        # validated_60m_bands_exm = ['B1', 'B9']
         validated_10m_bands, validated_10m_indices, dic_10m = validate(self.ds10r)
         self.assertEqual(set(validated_10m_bands), set(validated_10m_bands_exm))
         self.assertEqual(validated_10m_indices, validated_10m_indices_exm)

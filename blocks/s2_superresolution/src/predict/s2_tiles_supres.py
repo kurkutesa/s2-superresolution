@@ -1,8 +1,11 @@
-import argparse
 import re
 import sys
 import os
 from collections import defaultdict
+
+from typing import List, Dict
+from pathlib import Path
+import glob
 
 import numpy as np
 import rasterio
@@ -10,90 +13,51 @@ from rasterio.windows import Window
 from rasterio import Affine as A
 import pyproj as proj
 from supres import DSen2_20, DSen2_60
-from helper import get_logger
+from helper import get_logger, load_metadata, load_params, save_result, SENTINEL2_L1C
 
 logger = get_logger(__name__)
 
 # This code is adapted from this repository http://nicolas.brodu.net/code/superres and is distributed under the same
 # license.
 
-parser = argparse.ArgumentParser(description="Perform super-resolution on Sentinel-2 with DSen2. Code based on superres"
-                                             " by Nicolas Brodu.",
-                                 formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-parser.add_argument("data_file",
-                    help="An input sentinel-2 data file. This is the S2A[...].xml "
-                         "file in a SAFE directory extracted from that ZIP.")
-parser.add_argument("output_file", nargs="?",
-                    help="A target data file. See also the --save_prefix option, and the --output_file_format option "
-                         "(default is GTiff).")
-parser.add_argument("--roi_lon_lat", default="",
-                    help="Sets the region of interest to extract, WGS84, decimal notation. Use this syntax: lon_1,"
-                         "lat_1,lon_2,lat_2. The order of points 1 and 2 does not matter: the region of interest "
-                         "extends to the min/max in each direction. "
-                         "Example: --roi_lon_lat=-1.12132,44.72408,-0.90350,44.58646")
-parser.add_argument("--roi_x_y", default="",
-                    help="Sets the region of interest to extract as pixels locations on the 10m bands. Use this "
-                         "syntax: x_1,y_1,x_2,y_2. The order of points 1 and 2 does not matter: the region of interest "
-                         "extends to the min/max in each direction and to nearby 60m pixel boundaries.")
-parser.add_argument("--list_bands", action="store_true",
-                    help="List bands in the input file subdata set matching the selected UTM zone, and exit.")
-parser.add_argument("--run_60", action="store_true",
-                    help="Select which bands to process and include in the output file. If this flag is set it will "
-                         "super-resolve the 20m and 60m bands (B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12). If it is not "
-                         "set it will only super-resolve the 20m bands (B2,B3,B4,B5,B6,B7,B8,B8A,B11,B12). Band B10 "
-                         "is to noisy and is not super-resolved.")
-parser.add_argument("--list_UTM", action="store_true",
-                    help="List all UTM zones present in the input file, together with their coverage of the ROI in "
-                         "10m x 10m pixels.")
-parser.add_argument("--select_UTM", default="",
-                    help="Select a UTM zone. The default is to select the zone with the largest coverage of the ROI.")
-parser.add_argument("--list_output_file_formats", action="store_true",
-                    help="If specified, list all supported raster output file formats declared by GDAL and exit. Some "
-                         "of these formats may be inappropriate for storing Sentinel-2 multispectral data.")
-parser.add_argument("--output_file_format", default="GTiff",
-                    help="Speficies the name of a GDAL driver that supports file creation, like ENVI or GTiff. If no "
-                         "such driver exists, or if the format is \"npz\", then save all bands instead as a compressed "
-                         "python/numpy file")
-parser.add_argument("--copy_original_bands", action="store_true",
-                    help="The default is not to copy the original selected 10m bands into the output file in addition "
-                         "to the super-resolved bands. If this flag is used, the output file may be used as a 10m "
-                         "version of the original Sentinel-2 file.")
-parser.add_argument("--save_prefix", default="",
-                    help="If set, specifies the name of a prefix for all output files. Use a trailing / to save into a "
-                         "directory. The default of no prefix will save into the current directory. "
-                         "Example: --save_prefix result/")
-
-args = parser.parse_args()
-globals().update(args.__dict__)
 
 OUTPUT_DIR = '/tmp/output/'
-
-if run_60:
-    select_bands = 'B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12'
-else:
-    select_bands = 'B2,B3,B4,B5,B6,B7,B8,B8A,B11,B12'
-
-# convert comma separated band list into a list
-select_bands = [x for x in re.split(',', select_bands)]
-
-if roi_lon_lat:
-    roi_lon1, roi_lat1, roi_lon2, roi_lat2 = [float(x) for x in re.split(',', roi_lon_lat)]
-else:
-    roi_lon1, roi_lat1, roi_lon2, roi_lat2 = -180, -90, 180, 90
+INPUT_DIR = '/tmp/input/'
+data_folder = '*/MTD*.xml'
 
 
-raster_data = rasterio.open(data_file)
-datasets = raster_data.subdatasets
+def get_data(input_dir):
+    """
+    This method returns the raster data set of original image for all the available resolutions and the geojson file.
+    :param input_dir: The directory to the original image.
 
-for dsdesc in datasets:
-    if '10m' in dsdesc:
-        ds10 = rasterio.open(dsdesc)
-    elif '20m' in dsdesc:
-        ds20 = rasterio.open(dsdesc)
-    elif '60m' in dsdesc:
-        ds60 = rasterio.open(dsdesc)
-    else:
-        dsunknown = rasterio.open(dsdesc)
+    """
+    input_metadata = load_metadata()
+    for feature in input_metadata.features:
+        path_to_input_img = feature["properties"][SENTINEL2_L1C]
+        path_to_output_img = Path(path_to_input_img).stem + '_superresolution.tif'
+        out_feature = feature.copy()
+        out_feature["properties"]["custom.processing.superresolution"] = path_to_output_img
+    for file in glob.iglob(os.path.join(input_dir, path_to_input_img, data_folder), recursive=True):
+        DATA_PATH = file
+
+    raster_data = rasterio.open(DATA_PATH)
+    datasets = raster_data.subdatasets
+
+    for dsdesc in datasets:
+        if '10m' in dsdesc:
+            d1 = rasterio.open(dsdesc)
+        elif '20m' in dsdesc:
+            d2 = rasterio.open(dsdesc)
+        elif '60m' in dsdesc:
+            d6 = rasterio.open(dsdesc)
+        else:
+            dunknown = rasterio.open(dsdesc)
+
+    return d1, d2, d6, dunknown, out_feature, path_to_output_img
+
+
+ds10, ds20, ds60, dsunknown, output_jsonfile, output_name = get_data(INPUT_DIR)
 
 
 def get_max_min(x1, y1, x2, y2):
@@ -117,10 +81,10 @@ def get_max_min(x1, y1, x2, y2):
     tmymin = int(tmymin / 6) * 6
     tmymax = int((tmymax + 1) / 6) * 6 - 1
     area = (tmxmax - tmxmin + 1) * (tmymax - tmymin + 1)
-    return tmxmin,tmymin,tmxmax,tmymax, area
+    return tmxmin, tmymin, tmxmax, tmymax, area
 
 
-def to_xy(lon, lat):
+def to_xy(lon, lat, data):
     """
     This method gets the longitude and the latitude of a given point and projects it
     into pixel location in the new coordinate system.
@@ -129,28 +93,48 @@ def to_xy(lon, lat):
     :param lat: The longitude of a chosen point
     :return: The pixel location in the coordinate system of the input image
     """
+    # get the image's coordinate system.
+    coor = data.transform
+    a, b, xoff, d, e, yoff = [coor[x] for x in range(6)]
+
+    # transform the lat and lon into x and y position which are defined in the world's coordinate system.
     crs_wgs = proj.Proj(init='epsg:4326')
     crs_bng = proj.Proj(init='epsg:32639')
     xp, yp = proj.transform(crs_wgs, crs_bng, lon, lat)
     xp -= xoff
     yp -= yoff
+
     # matrix inversion
+    # get the x and y position in image's coordinate system.
     det_inv = 1. / (a * e - d * b)
     x = (e * xp - b * yp) * det_inv
     y = (-d * xp + a * yp) * det_inv
-    return (int(x), int(y))
+    return int(x), int(y)
 
 
-if roi_x_y:
-    roi_x1, roi_y1, roi_x2, roi_y2 = [float(x) for x in re.split(',', roi_x_y)]
-    xmin, ymin, xmax, ymax, area = get_max_min(roi_x1, roi_y1, roi_x2, roi_y2)
-elif not roi_lon_lat:
-    xmin, ymin, xmax, ymax = (0, 0, ds10.width, ds10.height)
-else:
-    a, b,xoff, d, e, yoff = ds10.transform
-    x1, y1 = to_xy(roi_lon1, roi_lat1)
-    x2, y2 = to_xy(roi_lon2, roi_lat2)
-    xmin, ymin, xmax, ymax, area = get_max_min(x1, y1, x2, y2)
+params = load_params()  # type: dict
+
+
+def area_of_interest():
+    """
+    This method returns the coordinates that define the desired area of interest.
+
+    """
+    if 'roi_x_y' in [*params]:
+        roi_x1, roi_y1, roi_x2, roi_y2 = params.get('roi_x_y')['default']
+        xmi, ymi, xma, yma, area = get_max_min(roi_x1, roi_y1, roi_x2, roi_y2)
+    elif 'roi_lon_lat' in [*params]:
+        roi_lon1, roi_lat1, roi_lon2, roi_lat2 = params.get('roi_lon_lat')['default']
+        x1, y1 = to_xy(roi_lon1, roi_lat1, ds10)
+        x2, y2 = to_xy(roi_lon2, roi_lat2, ds10)
+        xmi, ymi, xma, yma, area = get_max_min(x1, y1, x2, y2)
+    else:
+        xmi, ymi, xma, yma, area = (0, 0, ds10.width, ds10.height, ds10.width * ds10.height)
+
+    return xmi, ymi, xma, yma, area
+
+
+xmin, ymin, xmax, ymax, interest_area = area_of_interest()
 
 ds10desc = ds10.crs.wkt
 utm = ds10desc[ds10desc.find("UTM"):]
@@ -183,24 +167,7 @@ def validate_description(description):
     m = re.match("(.*?), central wavelength (\d+) nm", description)
     if m:
         return m.group(1) + " (" + m.group(2) + " nm)"
-    # Some HDR restrictions... ENVI band names should not include commas
-    if output_file_format == 'ENVI' and ',' in description:
-        pos = description.find(',')
-        return description[:pos] + description[(pos + 1):]
     return description
-
-
-if list_bands:
-    logger.info("\n10m bands:")
-    for b in range(0, ds10.count):
-        logger.info("- " + validate_description(ds10.descriptions[b]))
-    logger.info("\n20m bands:")
-    for b in range(0, ds20.count):
-        print("- " + validate_description(ds10.descriptions[b]))
-    logger.info("\n60m bands:")
-    for b in range(0, ds60.count):
-        logger.info("- " + validate_description(ds10.descriptions[b]))
-    logger.info("")
 
 
 def get_band_short_name(description):
@@ -241,17 +208,18 @@ def validate(data):
     >>> dic_10m
     defaultdict(<class 'str'>, {'B4': 'B4 (665 nm)', 'B3': 'B3 (560 nm)', 'B2': 'B2 (490 nm)', 'B8': 'B8 (842 nm)'})
     """
+    select_bands = 'B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12'
+    select_bands = [x for x in re.split(',', select_bands)]
     validated_bands = []
     validated_indices = []
     validated_descriptions = defaultdict(str)
-    for b in range(0, data.count):
-        desc = validate_description(data.descriptions[b])
+    for i in range(0, data.count):
+        desc = validate_description(data.descriptions[i])
         name = get_band_short_name(desc)
         if name in select_bands:
-            #logger.info(" " + name)
             select_bands.remove(name)
             validated_bands += [name]
-            validated_indices += [b]
+            validated_indices += [i]
             validated_descriptions[name] = desc
     return validated_bands, validated_indices, validated_descriptions
 
@@ -266,15 +234,6 @@ logger.info("Selected 60m bands:")
 validated_60m_bands, validated_60m_indices, dic_60m = validate(ds60)
 
 validated_descriptions_all = {**dic_10m, **dic_20m, **dic_60m}
-
-
-if list_bands:
-    sys.exit(0)
-
-output_file = save_prefix + output_file
-# Some HDR restrictions... ENVI file name should be the .bin, not the .hdr
-if output_file_format == 'ENVI' and (output_file[-4:] == '.hdr' or output_file[-4:] == '.HDR'):
-    output_file = output_file[:-4] + '.bin'
 
 
 def data_final(data, term, x_mi, y_mi, x_ma, y_ma, n):
@@ -295,47 +254,46 @@ def data_final(data, term, x_mi, y_mi, x_ma, y_ma, n):
     return d_final
 
 
-if run_60:
-    data10 = data_final(ds10, validated_10m_indices, xmin, ymin, xmax, ymax, 1)
-    data20 = data_final(ds20, validated_20m_indices, xmin // 2, ymin // 2, xmax // 2, ymax // 2, 1 // 2)
-    data60 = data_final(ds60, validated_60m_indices, xmin // 6, ymin // 6, xmax // 6, ymax // 6, 1 // 6)
-else:
-    data10 = data_final(ds10, validated_10m_indices, xmin, ymin, xmax, ymax, 1)
-    data20 = data_final(ds20, validated_20m_indices, xmin // 2, ymin // 2, xmax // 2, ymax // 2, 1 // 2)
+def run_model(d1, d2, d6):
+    """
+    This method takes the raster data at 10, 20, and 60 m resolutions and by applying fata_final method
+    creates the input data for the the convolutional neural network. It returns 10 m resolution for all
+    the bands in 20 and 60 m resolutions.
 
-if validated_60m_bands and validated_20m_bands and validated_10m_bands:
-    logger.info("Super-resolving the 60m data into 10m bands")
-    sr60 = DSen2_60(data10, data20, data60, deep=False)
-else:
-    sr60 = None
+    :param d1: Raster data at 10m resolution.
+    :param d2: Raster data at 20m resolution.
+    :param d6: Raster data at 60m resolution.
 
-if validated_10m_bands and validated_20m_bands:
-    logger.info("Super-resolving the 20m data into 10m bands")
-    sr20 = DSen2_20(data10, data20, deep=False)
-else:
-    sr20 = None
+    """
+    data10 = data_final(d1, validated_10m_indices, xmin, ymin, xmax, ymax, 1)
+    data20 = data_final(d2, validated_20m_indices, xmin // 2, ymin // 2, xmax // 2, ymax // 2, 1 // 2)
+    data60 = data_final(d6, validated_60m_indices, xmin // 6, ymin // 6, xmax // 6, ymax // 6, 1 // 6)
+
+    if validated_60m_bands and validated_20m_bands and validated_10m_bands:
+        logger.info("Super-resolving the 60m data into 10m bands")
+        sr60 = DSen2_60(data10, data20, data60, deep=False)
+        logger.info("Super-resolving the 20m data into 10m bands")
+        sr20 = DSen2_20(data10, data20, deep=False)
+        sr_final = np.concatenate((sr20, sr60), axis=2)
+        validated_sr_final_bands = validated_20m_bands + validated_60m_bands
+    else:
+        sr_final = None
+        validated_sr_final_bands = None
+        logger.info("No super-resolution performed, exiting")
+        sys.exit(0)
+    return sr_final, validated_sr_final_bands, data10.shape
 
 
-if sr20 is None:
-    logger.info("No super-resolution performed, exiting")
-    sys.exit(0)
+sr, validated_sr_bands, shape_10m = run_model(ds10, ds20, ds60)
 
 
-if sr60 is not None:
-    sr = np.concatenate((sr20, sr60), axis=2)
-    validated_sr_bands = validated_20m_bands + validated_60m_bands
-else:
-    sr = sr20
-    validated_sr_bands = validated_20m_bands
-
-if copy_original_bands:
-    out_dims = data10.shape[2] + sr.shape[2]
+if params['copy_original_bands']['default'] == 'yes':
+    out_dims = shape_10m[2] + sr.shape[2]
 else:
     out_dims = sr.shape[2]
 
 logger.info("Writing")
 logger.info(" the super-resolved bands in")
-logger.info(output_file)
 
 
 def update(data):
@@ -348,19 +306,15 @@ def update(data):
     new_transform = p['transform'] * A.translation(xmin, ymin)
     p.update(dtype=rasterio.float32)
     p.update(driver='GTiff')
-    p.update(width=data10.shape[1])
-    p.update(height=data10.shape[0])
+    p.update(width=shape_10m[1])
+    p.update(height=shape_10m[0])
     p.update(count=out_dims)
     p.update(transform=new_transform)
     return p
 
 
 profile = update(ds10)
-
-with rasterio.open(os.path.join(OUTPUT_DIR, output_file), 'w' ,**profile) as ds10w:
-    for bi, bn in enumerate(validated_sr_bands):
-        ds10w.write(sr20[:,:,bi], indexes=bi+1)
+filename = os.path.join(OUTPUT_DIR, output_name)
+save_result(sr, validated_sr_bands, validated_descriptions_all, profile, output_jsonfile, OUTPUT_DIR, filename)
 
 
-if output_file_format == "npz":
-    np.savez(output_file, bands=bands)
