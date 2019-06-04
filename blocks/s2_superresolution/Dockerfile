@@ -21,4 +21,4 @@ COPY src /block/src
 COPY weights /block/weights
 
 # Invoke run.py.
-CMD ["python", "/block/src/predict/s2_tiles_supres.py"]
+CMD ["python", "/block/src/predict/run.py"]

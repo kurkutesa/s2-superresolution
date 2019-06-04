@@ -1,4 +1,4 @@
 {
-  "roi_x_y": {"type": "array", "default": [5000,5000,5500,5500]},
-  "copy_original_bands": {"type":  "string", "default":  "yes"}
+  "roi_x_y": [5000,5000,5500,5500],
+  "copy_original_bands": null
 }

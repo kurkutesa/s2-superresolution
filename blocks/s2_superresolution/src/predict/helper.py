@@ -1,9 +1,10 @@
 import logging
 import os
 import json
+from pathlib import Path
 from typing import Any, Union
-from geojson import Feature, FeatureCollection
-import rasterio
+from geojson import Feature, FeatureCollection  # type: ignore
+import rasterio  # type: ignore
 
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 SENTINEL2_L1C = "up42.data.scene.sentinel2_l1c"
@@ -22,6 +23,14 @@ def get_logger(name, level=logging.DEBUG):
     logger.addHandler(ch)
 
     return logger
+
+
+def ensure_data_directories_exist():
+    """
+    This method checks input and output directories for data flow
+    """
+    Path('/tmp/input/').mkdir(parents=True, exist_ok=True)
+    Path('/tmp/output/').mkdir(parents=True, exist_ok=True)
 
 
 def load_metadata() -> FeatureCollection:
