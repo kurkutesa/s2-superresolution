@@ -13,7 +13,7 @@
     "parameters": {
         "roi_x_y": {"type": "array", "default": null},
         "roi_lon_lat": {"type": "array", "default": null},
-        "copy_original_bands": {"type":  "string", "default":  null}
+        "copy_original_bands": {"type":  "boolean", "default":  false}
     },
     "machine": {
 	    "type": "large"

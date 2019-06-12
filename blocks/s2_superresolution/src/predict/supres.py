@@ -1,11 +1,14 @@
 import sys
-sys.path.append('/block/src')
+import os
+sys.path.append('../src')
 from utils.DSen2Net import s2model
 from utils.patches import get_test_patches, get_test_patches60, recompose_images
 
 
 SCALE = 2000
-MDL_PATH = '/block/weights/'
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
+MDL_PATH = 'weights/'
+
 
 def DSen2_20(d10, d20, deep=False):
     """

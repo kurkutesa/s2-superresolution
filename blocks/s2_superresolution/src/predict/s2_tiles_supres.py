@@ -3,17 +3,17 @@ import sys
 import os
 from collections import defaultdict
 
-from typing import List, Dict
+from typing import List, Tuple
 from pathlib import Path
 import glob
 
-import numpy as np  # type: ignore
-import rasterio  # type: ignore
-from rasterio.windows import Window  # type: ignore
-from rasterio import Affine as A  # type: ignore
-import pyproj as proj  # type: ignore
-from supres import DSen2_20, DSen2_60  # type: ignore
-from helper import get_logger, load_metadata, load_params, save_result, SENTINEL2_L1C, \
+import numpy as np
+import rasterio
+from rasterio.windows import Window
+from rasterio import Affine as A
+import pyproj as proj
+from .supres import DSen2_20, DSen2_60
+from .helper import get_logger, load_metadata, load_params, save_result, SENTINEL2_L1C, \
     ensure_data_directories_exist
 
 logger = get_logger(__name__)
@@ -24,53 +24,59 @@ logger = get_logger(__name__)
 
 class Superresolution:
     """
-    This class implements a CNN model to obtain a high resolution (10m) bands for 20m and 60m resolution.
+    This class implements a CNN model to obtain a high resolution (10m)
+    bands for 20m and 60m resolution.
     """
 
-    def __init__(self, OUTPUT_DIR: str = '/tmp/output/',
-                 INPUT_DIR: str = '/tmp/input/',
+    def __init__(self, output_dir: str = '/tmp/output/',
+                 input_dir: str = '/tmp/input/',
                  data_folder: str = '*/MTD*.xml'):
         """
-        :param OUTPUT_DIR: The directory for the output image.
-        :param INPUT_DIR: The directory of the original image.
+        :param output_dir: The directory for the output image.
+        :param input_dir: The directory of the original image.
         :param data_folder: The original image file.
         """
-        self.OUTPUT_DIR = OUTPUT_DIR
-        self.INPUT_DIR = INPUT_DIR
+        self.output_dir = output_dir
+        self.input_dir = input_dir
         self.data_folder = data_folder
 
-    def get_data(self, input_dir):
+    def get_data(self) -> Tuple:
         """
-        This method returns the raster data set of original image for all the available resolutions and the geojson file.
-        :param input_dir: The directory to the original image.
+        This method returns the raster data set of original image for
+        all the available resolutions and the geojson file.
+
+        :param input_loc: The directory to the original image.
 
         """
+        global path_to_input_img
+        global data_path
         input_metadata = load_metadata()
         for feature in input_metadata.features:
             path_to_input_img = feature["properties"][SENTINEL2_L1C]
             path_to_output_img = Path(path_to_input_img).stem + '_superresolution.tif'
             out_feature = feature.copy()
             out_feature["properties"]["custom.processing.superresolution"] = path_to_output_img
-        for file in glob.iglob(os.path.join(input_dir, path_to_input_img, self.data_folder), recursive=True):
-            DATA_PATH = file
+        for file in glob.iglob(os.path.join(self.input_dir, path_to_input_img, self.data_folder), recursive=True):
+            data_path = file
 
-        raster_data = rasterio.open(DATA_PATH)
+        raster_data = rasterio.open(data_path)
         datasets = raster_data.subdatasets
 
         for dsdesc in datasets:
             if '10m' in dsdesc:
-                d1 = rasterio.open(dsdesc)
+                d_1 = rasterio.open(dsdesc)
             elif '20m' in dsdesc:
-                d2 = rasterio.open(dsdesc)
+                d_2 = rasterio.open(dsdesc)
             elif '60m' in dsdesc:
-                d6 = rasterio.open(dsdesc)
+                d_6 = rasterio.open(dsdesc)
             else:
                 dunknown = rasterio.open(dsdesc)
 
-        return d1, d2, d6, dunknown, out_feature, path_to_output_img
+        return d_1, d_2, d_6, dunknown, out_feature, path_to_output_img
 
     @staticmethod
-    def get_max_min(x1, y1, x2, y2, data):
+    def get_max_min(x_1: int, y_1: int, x_2: int, y_2: int, data) -> Tuple:
+        # pylint: disable = R0914
         """
         This method gets pixels' location for the region of interest on the 10m bands
         and returns the min/max in each direction and to nearby 60m pixel boundaries and the area
@@ -81,10 +87,10 @@ class Superresolution:
         (0, 0, 395, 395, 156816)
 
         """
-        tmxmin = max(min(x1, x2, data.width - 1), 0)
-        tmxmax = min(max(x1, x2, 0), data.width - 1)
-        tmymin = max(min(y1, y2, data.height - 1), 0)
-        tmymax = min(max(y1, y2, 0), data.height - 1)
+        tmxmin = max(min(x_1, x_2, data.width - 1), 0)
+        tmxmax = min(max(x_1, x_2, 0), data.width - 1)
+        tmymin = max(min(y_1, y_2, data.height - 1), 0)
+        tmymax = min(max(y_1, y_2, 0), data.height - 1)
         # enlarge to the nearest 60 pixel boundary for the super-resolution
         tmxmin = int(tmxmin / 6) * 6
         tmxmax = int((tmxmax + 1) / 6) * 6 - 1
@@ -94,7 +100,8 @@ class Superresolution:
         return tmxmin, tmymin, tmxmax, tmymax, area
 
     @staticmethod
-    def to_xy(lon, lat, data):
+    def to_xy(lon: float, lat: float, data) -> Tuple:
+        # pylint: disable = R0914
         """
         This method gets the longitude and the latitude of a given point and projects it
         into pixel location in the new coordinate system.
@@ -107,18 +114,19 @@ class Superresolution:
         coor = data.transform
         a, b, xoff, d, e, yoff = [coor[x] for x in range(6)]
 
-        # transform the lat and lon into x and y position which are defined in the world's coordinate system.
+        # transform the lat and lon into x and y position which are defined in
+        # the world's coordinate system.
         crs_wgs = proj.Proj(init='epsg:4326')
         crs_bng = proj.Proj(init='epsg:32639')
-        xp, yp = proj.transform(crs_wgs, crs_bng, lon, lat)
-        xp -= xoff
-        yp -= yoff
+        x_p, y_p = proj.transform(crs_wgs, crs_bng, lon, lat)
+        x_p -= xoff
+        y_p -= yoff
 
         # matrix inversion
         # get the x and y position in image's coordinate system.
         det_inv = 1. / (a * e - d * b)
-        x = (e * xp - b * yp) * det_inv
-        y = (-d * xp + a * yp) * det_inv
+        x = (e * x_p - b * y_p) * det_inv
+        y = (-d * x_p + a * y_p) * det_inv
         return int(x), int(y)
 
     def area_of_interest(self, data):
@@ -132,9 +140,9 @@ class Superresolution:
             xmi, ymi, xma, yma, area = self.get_max_min(roi_x1, roi_y1, roi_x2, roi_y2, data)
         elif 'roi_lon_lat' in [*params]:
             roi_lon1, roi_lat1, roi_lon2, roi_lat2 = params.get('roi_lon_lat')
-            x1, y1 = self.to_xy(roi_lon1, roi_lat1, data)
-            x2, y2 = self.to_xy(roi_lon2, roi_lat2, data)
-            xmi, ymi, xma, yma, area = self.get_max_min(x1, y1, x2, y2, data)
+            x_1, y_1 = self.to_xy(roi_lon1, roi_lat1, data)
+            x_2, y_2 = self.to_xy(roi_lon2, roi_lat2, data)
+            xmi, ymi, xma, yma, area = self.get_max_min(x_1, y_1, x_2, y_2, data)
         else:
             xmi, ymi, xma, yma, area = (0, 0, data.width, data.height, data.width * data.height)
 
@@ -142,9 +150,8 @@ class Superresolution:
 #ds10desc = ds10.crs.wkt
 #utm = ds10desc[ds10desc.find("UTM"):]
 
-
     @staticmethod
-    def validate_description(description):
+    def validate_description(description: str) -> str:
         """
         This method rewrites the description of each band in the given data set.
 
@@ -162,7 +169,7 @@ class Superresolution:
         return description
 
     @staticmethod
-    def get_band_short_name(description):
+    def get_band_short_name(description: str) -> str:
         """
         This method returns only the name of the bands at a chosen resolution.
 
@@ -181,7 +188,7 @@ class Superresolution:
             return description[:description.find(' ')]
         return description[:3]
 
-    def validate(self, data):
+    def validate(self, data) -> Tuple:
         """
         This method takes the short name of the bands for each separate resolution and returns
         three lists. The validated_bands and validated_indices contain the name of the bands and the indices
@@ -199,11 +206,11 @@ class Superresolution:
         >>> dic_10m
         defaultdict(<class 'str'>, {'B4': 'B4 (665 nm)', 'B3': 'B3 (560 nm)', 'B2': 'B2 (490 nm)', 'B8': 'B8 (842 nm)'})
         """
-        select_bands = 'B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12'
-        select_bands = [x for x in re.split(',', select_bands)]
-        validated_bands = []
-        validated_indices = []
-        validated_descriptions = defaultdict(str)
+        input_select_bands = 'B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12'  # type: str
+        select_bands = [x for x in re.split(',', input_select_bands)]  # type: List[str]
+        validated_bands = []  # type: list
+        validated_indices = []  # type: list
+        validated_descriptions = defaultdict(str)  # type: defaultdict
         for i in range(0, data.count):
             desc = self.validate_description(data.descriptions[i])
             name = self.get_band_short_name(desc)
@@ -215,7 +222,8 @@ class Superresolution:
         return validated_bands, validated_indices, validated_descriptions
 
     @staticmethod
-    def data_final(data, term, x_mi, y_mi, x_ma, y_ma, n):
+    def data_final(data, term: List, x_mi: int, y_mi: int, x_ma: int, y_ma: int, n) -> np.ndarray:
+        # pylint: disable=R0914
         """
         This method takes the raster file at a specific resolution and uses the output of get_max_min
         to specify the area of interest. Then it returns an numpy array of values for all the pixels inside
@@ -228,22 +236,22 @@ class Superresolution:
         if term:
             print(term)
             d_final = np.rollaxis(
-                data.read(window=Window(col_off=x_mi, row_off=y_mi, width=x_ma - x_mi + n, height=y_ma - y_mi + n)), 0, 3)[
-                     :, :, term]
+                data.read(window=Window(col_off=x_mi, row_off=y_mi, width=x_ma - x_mi + n, height=y_ma - y_mi + n))
+                , 0, 3)[:, :, term]
         return d_final
 
-    def run_model(self, d1, d2, d6):
+    def run_model(self, d_1, d_2, d_6) -> Tuple:
         """
         This method takes the raster data at 10, 20, and 60 m resolutions and by applying fata_final method
         creates the input data for the the convolutional neural network. It returns 10 m resolution for all
         the bands in 20 and 60 m resolutions.
 
-        :param d1: Raster data at 10m resolution.
-        :param d2: Raster data at 20m resolution.
-        :param d6: Raster data at 60m resolution.
+        :param d_1: Raster data at 10m resolution.
+        :param d_2: Raster data at 20m resolution.
+        :param d_6: Raster data at 60m resolution.
 
         """
-        xmin, ymin, xmax, ymax, interest_area = self.area_of_interest(d1)
+        xmin, ymin, xmax, ymax, interest_area = self.area_of_interest(d_1)
         logger.info("Selected pixel region:")
         logger.info('xmin = ' + str(xmin))
         logger.info('ymin = ' + str(ymin))
@@ -254,19 +262,19 @@ class Superresolution:
             sys.exit(0)
 
         logger.info("Selected 10m bands:")
-        validated_10m_bands, validated_10m_indices, dic_10m = self.validate(d1)
+        validated_10m_bands, validated_10m_indices, dic_10m = self.validate(d_1)
 
         logger.info("Selected 20m bands:")
-        validated_20m_bands, validated_20m_indices, dic_20m = self.validate(d2)
+        validated_20m_bands, validated_20m_indices, dic_20m = self.validate(d_2)
 
         logger.info("Selected 60m bands:")
-        validated_60m_bands, validated_60m_indices, dic_60m = self.validate(d6)
+        validated_60m_bands, validated_60m_indices, dic_60m = self.validate(d_6)
 
         validated_descriptions_all = {**dic_10m, **dic_20m, **dic_60m}
 
-        data10 = self.data_final(d1, validated_10m_indices, xmin, ymin, xmax, ymax, 1)
-        data20 = self.data_final(d2, validated_20m_indices, xmin // 2, ymin // 2, xmax // 2, ymax // 2, 1 // 2)
-        data60 = self.data_final(d6, validated_60m_indices, xmin // 6, ymin // 6, xmax // 6, ymax // 6, 1 // 6)
+        data10 = self.data_final(d_1, validated_10m_indices, xmin, ymin, xmax, ymax, 1)
+        data20 = self.data_final(d_2, validated_20m_indices, xmin // 2, ymin // 2, xmax // 2, ymax // 2, 1 // 2)
+        data60 = self.data_final(d_6, validated_60m_indices, xmin // 6, ymin // 6, xmax // 6, ymax // 6, 1 // 6)
 
         if validated_60m_bands and validated_20m_bands and validated_10m_bands:
             logger.info("Super-resolving the 60m data into 10m bands")
@@ -279,11 +287,11 @@ class Superresolution:
             logger.info("No super-resolution performed, exiting")
             sys.exit(0)
 
-        p = self.update(d1, data10.shape, sr_final, xmin, ymin)
+        p = self.update(d_1, data10.shape, sr_final, xmin, ymin)
         return sr_final, validated_sr_final_bands, validated_descriptions_all, p
 
     @staticmethod
-    def update(data, size_10m, model_output, xmi, ymi):
+    def update(data, size_10m: Tuple, model_output: np.ndarray, xmi: int, ymi: int):
         """
         This method creates the proper georeferencing for the output image.
         :param data: The raster file for 10m resolution.
@@ -291,7 +299,7 @@ class Superresolution:
         """
         # Here based on the params.json file, the output image dimension will be calculated.
         params = load_params()  # type: dict
-        if params['copy_original_bands'] == 'yes':
+        if params['copy_original_bands'] == 'true':
             out_dims = size_10m[2] + model_output.shape[2]
         else:
             out_dims = model_output.shape[2]
@@ -313,9 +321,9 @@ class Superresolution:
         """
         ensure_data_directories_exist()
         srr = Superresolution()
-        ds10, ds20, ds60, dsunknown, output_jsonfile, output_name = srr.get_data(srr.INPUT_DIR)
+        ds10, ds20, ds60, dsunknown, output_jsonfile, output_name = srr.get_data()
         sr, validated_sr_bands, validated_desc_all, profile = srr.run_model(ds10, ds20, ds60)
-        filename = os.path.join(srr.OUTPUT_DIR, output_name)
+        filename = os.path.join(srr.output_dir, output_name)
         logger.info("Writing")
         logger.info(" the super-resolved bands in")
-        save_result(sr, validated_sr_bands, validated_desc_all, profile, output_jsonfile, srr.OUTPUT_DIR, filename)
+        save_result(sr, validated_sr_bands, validated_desc_all, profile, output_jsonfile, srr.output_dir, filename)

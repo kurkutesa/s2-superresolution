@@ -2,9 +2,8 @@ import logging
 import os
 import json
 from pathlib import Path
-from typing import Any, Union
-from geojson import Feature, FeatureCollection  # type: ignore
-import rasterio  # type: ignore
+from geojson import Feature, FeatureCollection
+import rasterio
 
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 SENTINEL2_L1C = "up42.data.scene.sentinel2_l1c"
@@ -58,8 +57,8 @@ def load_params() -> dict:
     helper_logger = get_logger(__name__)
     data = os.environ.get("UP42_TASK_PARAMETERS", '{}')
     helper_logger.debug("Fetching parameters for this blocks: %s", data)
-    if data == "":
-        data = "{}"
+    if data == '{}':
+        data = '{"roi_x_y": [5000,5000,5500,5500], "copy_original_bands": "false"}'
     return json.loads(data)
 
 
