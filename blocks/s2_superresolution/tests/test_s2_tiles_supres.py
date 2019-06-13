@@ -3,7 +3,7 @@ import unittest
 import glob
 import os
 
-from context import Superresolution
+from .context import Superresolution
 
 input_folder = '/tmp/input/'
 data_folder = '*/*/MTD*.xml'
