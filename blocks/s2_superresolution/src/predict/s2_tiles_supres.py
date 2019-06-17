@@ -61,7 +61,7 @@ class Superresolution:
             out_feature = feature.copy()
             out_feature["properties"]["custom.processing.superresolution"] =\
                 path_to_output_img
-        for file in glob.iglob(os.path.join(self.input_dir, path_to_input_img,
+        for file in glob.iglob(os.path.join(self.input_dir, str(path_to_input_img),
                                             self.data_folder), recursive=True):
             data_path = file
 
@@ -103,9 +103,8 @@ class Superresolution:
         area = (tmxmax - tmxmin + 1) * (tmymax - tmymin + 1)
         return tmxmin, tmymin, tmxmax, tmymax, area
 
-    @staticmethod
     # pylint: disable-msg=too-many-locals
-    def to_xy(lon: float, lat: float, data) -> Tuple:
+    def to_xy(self, lon: float, lat: float, data) -> Tuple:
         """
         This method gets the longitude and the latitude of a given point and projects it
         into pixel location in the new coordinate system.
@@ -119,8 +118,9 @@ class Superresolution:
 
         # transform the lat and lon into x and y position which are defined in
         # the world's coordinate system.
-        crs_wgs = proj.Proj(init='epsg:4326')
-        crs_bng = proj.Proj(init='epsg:32639')
+        local_crs = self.get_utm(data)
+        crs_wgs = proj.Proj(init='epsg:4326')  # WGS 84 geographic coordinate system
+        crs_bng = proj.Proj(init=local_crs)  # use a locally appropriate projected CRS
         x_p, y_p = proj.transform(crs_wgs, crs_bng, lon, lat)
         x_p -= xoff
         y_p -= yoff
@@ -131,6 +131,17 @@ class Superresolution:
         x_n = (e_t * x_p - b_t * y_p) * det_inv
         y_n = (-d_t * x_p + a_t * y_p) * det_inv
         return int(x_n), int(y_n)
+
+    @staticmethod
+    def get_utm(data) -> str:
+        """
+        This method returns the utm of the input image.
+        :param data: The raster file for a specific resolution.
+        :return: UTM of the selected raster file.
+        """
+        data_crs = data.crs.to_dict()
+        utm = data_crs['init']
+        return utm
 
     # pylint: disable-msg=too-many-locals
     def area_of_interest(self, data):

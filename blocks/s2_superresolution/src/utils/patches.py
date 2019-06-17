@@ -15,7 +15,14 @@ from predict.helper import get_logger
 
 LOGGER = get_logger(__name__)
 
+
 def interp_patches(image_20, image_10_shape) -> np.ndarray:
+    """
+    This method resize the image to match a certain size.
+    :param image_20: Input image of 20m resolution.
+    :param image_10_shape: The pixel size of the image at 10m resolutions.
+    :return: A resized image.
+    """
     data20_interp = np.zeros((image_20.shape[0:2] + image_10_shape[2:4])).astype(np.float32)
     for k_i in range(image_20.shape[0]):
         for w_i in range(image_20.shape[1]):
@@ -27,7 +34,10 @@ def interp_patches(image_20, image_10_shape) -> np.ndarray:
 
 # pylint: disable-msg=too-many-locals
 def get_test_patches(dset_10, dset_20, patchsize=128, border=4, interp=True) -> Tuple:
-
+    """
+    This method create the test patches of for testing the model to create 10m resolution
+    for all the spectral bands at 20m.
+    """
     patch_size_hr = (patchsize, patchsize)
     patch_size_lr = [p//2 for p in patch_size_hr]
     border_hr = border
@@ -90,7 +100,10 @@ def get_test_patches(dset_10, dset_20, patchsize=128, border=4, interp=True) -> 
 # pylint: disable-msg=too-many-locals
 # pylint: disable-msg=too-many-arguments
 def get_test_patches60(dset_10, dset_20, dset_60, patchsize=128, border=8, interp=True) -> Tuple:
-
+    """
+    This method create the test patches of for testing the model to create 10m resolution
+    for all the spectral bands at 20m and 60m.
+    """
     patch_size_10 = (patchsize, patchsize)
     patch_size_20 = [p//2 for p in patch_size_10]
     patch_size_60 = [p//6 for p in patch_size_10]
@@ -164,6 +177,11 @@ def get_test_patches60(dset_10, dset_20, dset_60, patchsize=128, border=8, inter
 
 # pylint: disable-msg=too-many-arguments
 def save_test_patches(dset_10, dset_20, file, patchsize=128, border=4, interp=True):
+    """
+    This methods save all testing patches to the defined directory. So that they will
+    be used as input for the CNN for create the 10m resolution for all the spectral
+    bands at 20m resolution.
+    """
     image_10, data20_interp = get_test_patches\
         (dset_10, dset_20, patchsize=patchsize, border=border, interp=interp)
 
@@ -177,7 +195,11 @@ def save_test_patches(dset_10, dset_20, file, patchsize=128, border=4, interp=Tr
 # pylint: disable-msg=too-many-arguments
 def save_test_patches60(dset_10, dset_20, dset_60,
                         file, patchsize=192, border=12, interp=True):
-
+    """
+    This methods save all testing patches to the defined directory. So that they will
+    be used as input for the CNN for create the 10m resolution for all the spectral
+    bands at 20m and 60m resolution.
+    """
     image_10, data20_interp, data60_interp = get_test_patches60\
         (dset_10, dset_20, dset_60, patchsize=patchsize, border=border, interp=interp)
     LOGGER.info("Saving to file %s", file)
@@ -190,7 +212,9 @@ def save_test_patches60(dset_10, dset_20, dset_60,
 
 # pylint: disable-msg=too-many-locals
 def save_random_patches(dset_20gt, dset_10, dset_20, file, nr_crop=8000):
-
+    """
+    This method creates random patches based on the input image for training the model.
+    """
     patch_size_hr = (32, 32)
     patch_size_lr = (16, 16)
 
@@ -232,7 +256,9 @@ def save_random_patches(dset_20gt, dset_10, dset_20, file, nr_crop=8000):
 # pylint: disable-msg=too-many-locals
 # pylint: disable-msg=too-many-arguments
 def save_random_patches60(dset_60gt, dset_10, dset_20, dset_60, file, nr_crop=500):
-
+    """
+    This method creates random patches based on the input image for training the model.
+    """
     patch_size_10 = (96, 96)
     patch_size_20 = (48, 48)
     patch_size_60 = (16, 16)
@@ -288,21 +314,29 @@ def save_random_patches60(dset_60gt, dset_10, dset_20, dset_60, file, nr_crop=50
 
 
 def splittrainval(train_path, train, label) -> Tuple:
+    """
+    This method is used for splitting the input image into training, testing and validation
+    sets.
+    """
     try:
         val_ind = np.load(train_path + 'val_index.npy')
     except IOError:
-        print("Please define the validation split indices,"
-              " usually located in .../data/test/. To generate this file use"
-              " createRandom.py")
-    val_tr = [p[val_ind] for p in train]
-    train = [p[~val_ind] for p in train]
-    val_lb = label[val_ind]
-    label = label[~val_ind]
+        LOGGER.debug("Please define the validation split indices,"
+                     " usually located in .../data/test/. To generate this file use"
+                     " createRandom.py")
+    val_tr = [p[val_ind] for p in train]  # pylint: disable-msg=invalid-unary-operand-type
+    train = [p[~val_ind] for p in train]  # pylint: disable-msg=invalid-unary-operand-type
+    val_lb = label[val_ind]  # pylint: disable-msg=invalid-unary-operand-type
+    label = label[~val_ind]  # pylint: disable-msg=invalid-unary-operand-type
     LOGGER.info("Loaded %s patches for training.", val_ind.shape[0])
     return train, label, val_tr, val_lb
 
 
 def opendatafiles(path, run_60, scale):
+    """
+    This method opens the relevant path that the training data has been saved. Then
+    the splittrainval method will be called to make the splitting.
+    """
     if run_60:
         train_path = path + 'train60/'
     else:
@@ -342,11 +376,14 @@ def opendatafiles(path, run_60, scale):
 
     if run_60:
         return splittrainval(train_path, [data10, data20, data60], data60_gt)
-    else:
-        return splittrainval(train_path, [data10, data20], data20_gt)
+
+    return splittrainval(train_path, [data10, data20], data20_gt)
 
 
 def opendatafilestest(path, run_60, scale, true_scale=False) -> Tuple:
+    """
+    This method return the image that will be used for testing the model.
+    """
     if not scale:
         scale = 1
 
@@ -373,6 +410,9 @@ def opendatafilestest(path, run_60, scale, true_scale=False) -> Tuple:
 
 
 def downpixelaggr(img, scale=2):
+    """
+    This method use a Gaussian filter for blurring the original image.
+    """
     from scipy.ndimage.filters import gaussian_filter
 
     if len(img.shape) == 2:
@@ -393,6 +433,9 @@ def downpixelaggr(img, scale=2):
 
 
 def recompose_images(a_re, border, size=None):
+    """
+    This method attached all the patches from prediction to create the final output image.
+    """
     if a_re.shape[0] == 1:
         images = a_re[0]
     else:
@@ -417,7 +460,7 @@ def recompose_images(a_re, border, size=None):
                 if xpoint > size[1] - patch_size:
                     xpoint = size[1] - patch_size
                 images[:, ypoint:ypoint+patch_size, xpoint:xpoint+patch_size] =\
-                    a_re[current_patch, :, border:a_re.shape[2] - border, border:a_re.shape[3] - border]
+                    a_re[current_patch, :, border:a_re.shape[2]-border, border:a_re.shape[3]-border]
                 current_patch += 1
 
     return images.transpose((1, 2, 0))

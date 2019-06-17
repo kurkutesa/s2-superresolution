@@ -3,6 +3,7 @@ keras
 pytest
 pytest-pylint
 pytest-cov
+pytest-mypy
 numpy
 argparse
 rasterio

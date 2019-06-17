@@ -84,9 +84,10 @@ def test_output_description(fixture_2):
 
 
 # pylint: disable=redefined-outer-name
-def test_output_projection(fixture_2):
+def test_output_projection(fixture_1, fixture_2):
     """
     This method checks whether the outcome image has the correct georeference.
     """
-    crs_exm = 'epsg:32639'
+    ds10r, ds20r, ds60r, output_jsonfile, output_name = fixture_1.get_data()
+    crs_exm = fixture_1.get_utm(ds10r)
     assert fixture_2.crs == crs_exm

@@ -45,8 +45,8 @@ def dsen2_20(d10, d20, deep=False) -> np.ndarray:
 def dsen2_60(d10, d20, d60, deep=False) -> np.ndarray:
     """
     This methods uses a convolutional neural network
-    created from the _predict method to obtain a 10m
-    resolution image based on 20m and 60m resolution images.
+    created from the _predict method to 10m resolution
+    for 20m and 60m spectral bands.
 
     :param d10: The numpy array of pixels's value for 10m resolution.
     :param d20: The numpy array of pixels's value for 20m resolution.
