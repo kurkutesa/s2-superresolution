@@ -1,4 +1,4 @@
 {
   "roi_x_y": [5000,5000,5500,5500],
-  "copy_original_bands": null
+  "copy_original_bands": false
 }
