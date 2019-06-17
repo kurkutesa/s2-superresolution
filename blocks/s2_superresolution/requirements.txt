@@ -1,5 +1,8 @@
 tensorflow
 keras
+pytest
+pytest-pylint
+pytest-cov
 numpy
 argparse
 rasterio

@@ -1,3 +1,6 @@
+"""
+This module includes necessary helper functions that is used in the s2_tiles_supres script.
+"""
 import logging
 import os
 import json
@@ -15,11 +18,11 @@ def get_logger(name, level=logging.DEBUG):
     """
     logger = logging.getLogger(name)
     logger.setLevel(level)
-    ch = logging.StreamHandler()
-    ch.setLevel(level)
+    c_h = logging.StreamHandler()
+    c_h.setLevel(level)
     formatter = logging.Formatter(LOG_FORMAT)
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    c_h.setFormatter(formatter)
+    logger.addHandler(c_h)
 
     return logger
 
@@ -37,16 +40,14 @@ def load_metadata() -> FeatureCollection:
     Get the data from the provided location
     """
     if os.path.exists("/tmp/input/data.json"):
-        with open("/tmp/input/data.json") as fp:
-            data = json.loads(fp.read())
+        with open("/tmp/input/data.json") as f_p:
+            data = json.loads(f_p.read())
 
         features = []
         for feature in data["features"]:
             features.append(Feature(**feature))
 
-        return FeatureCollection(features)
-    else:
-        return FeatureCollection([])
+    return FeatureCollection(features)
 
 
 def load_params() -> dict:
@@ -62,23 +63,26 @@ def load_params() -> dict:
     return json.loads(data)
 
 
-def save_result(model_output, output_bands, valid_desc, output_profile, output_features, output_dir, image_name):
+# pylint: disable-msg=too-many-arguments
+def save_result(model_output, output_bands, valid_desc,
+                output_profile, output_features, output_dir, image_name):
     """
-    This method saves the feature collection meta data and the image with high resolution for desired bands
-    to the provided location.
+    This method saves the feature collection meta data and the
+    image with high resolution for desired bands to the provided location.
     :param model_output: The high resolution image.
     :param output_bands: The associated bands for the output image.
     :param valid_desc: The valid description of the existing bands.
     :param output_profile: The georeferencing for the output image.
     :param output_features: The meta data for the output image.
-    :param output_dir: The directory in which the output image and associated meta data will be saved.
+    :param output_dir: The directory in which the output image
+        and associated meta data will be saved.
     :param image_name: The name of the output image.
 
     """
-    with rasterio.open(image_name, "w", **output_profile) as ds:
-        for bi, bn in enumerate(output_bands):
-            ds.write(model_output[:, :, bi], indexes=bi + 1)
-            ds.set_band_description(bi+1, "SR " + valid_desc[bn])
+    with rasterio.open(image_name, "w", **output_profile) as d_s:
+        for b_i, b_n in enumerate(output_bands):
+            d_s.write(model_output[:, :, b_i], indexes=b_i + 1)
+            d_s.set_band_description(b_i+1, "SR " + valid_desc[b_n])
 
-    with open(output_dir + "data.json", "w") as fp:
-        fp.write(json.dumps(output_features, indent=2))
+    with open(output_dir + "data.json", "w") as f_p:
+        f_p.write(json.dumps(output_features, indent=2))

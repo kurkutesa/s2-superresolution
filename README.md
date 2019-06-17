@@ -30,7 +30,7 @@ description in terms of the UP42 core concepts.
  3. [UP42](https://up42.com) account credentials.
  4. [Python](https://python.org) 3.5 or later.
  5. Required Python packages as specified in
-    `blocks/s2-superresolutionrequirements.txt`.
+    `blocks/s2-superresolution/requirements.txt`.
 
 ## Usage
 
@@ -59,7 +59,7 @@ virtualenv -p $(which python3.7) up42-supres
 After creating a virtual environment and activating it, all the necessary libraries can be installed on this environment by doing:
 
 ```bash
-./blocks/s2_superresolution/setup.sh
+./s2-superresolution/blocks/s2_superresolution/setup.sh
 ```
 #### Create the super resolution image using the trained network
 
@@ -75,12 +75,12 @@ within 20m and 60m resolutions.
 
 #### Run the tests
 
-This project uses [unittest](https://docs.python.org/3/library/unittest.html) for testing. To run
+This project uses [pytest](https://docs.pytest.org/en/latest/) for testing. To run
 the tests first create a `/tmp/input/` directory and place your image containing the `.SAFE` file in this directory. 
 Therefore the input image will be read from the `/tmp/input/` directory. Then do as following:
 
 ```bash
-./blocks/s2-superresolution/test.sh
+./s2-superresolution/blocks/s2-superresolution/test.sh
 ```
 
 from the repository top directory.

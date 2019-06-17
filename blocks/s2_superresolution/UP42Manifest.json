@@ -16,7 +16,7 @@
         "copy_original_bands": {"type":  "boolean", "default":  false}
     },
     "machine": {
-	    "type": "large"
+	    "type": "xlarge"
     },
     "input_capabilities": {
         "up42.data.scene.sentinel2_l1c": {}
