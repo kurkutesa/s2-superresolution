@@ -79,7 +79,7 @@ This project uses [pytest](https://docs.pytest.org/en/latest/) for testing. To r
 the tests, first create a `/tmp/input/` directory and place your image which contains the `.SAFE` file in this directory. 
 Please note that the input image should be the outcome of the `Sentinel-2 L1C MSI Full Scenes` data block which contains a
 ``data.json``. This ``data.json`` file is needed for running the test file correctly.
-Also, the output image will be read from the `/tmp/output/` directory. Finally to run the test, do as following:
+Also, the output image will be read from the `/tmp/output/` directory. Finally, to run the test do as following:
 
 ```bash
 ./s2-superresolution/blocks/s2-superresolution/test.sh
