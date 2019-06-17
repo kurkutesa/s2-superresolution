@@ -73,31 +73,40 @@ The source code also predict the lowest resolution bands (60m) by default, so th
 within 20m and 60m resolutions.
 
 
-#### Run the tests
+### Run the tests
 
 This project uses [pytest](https://docs.pytest.org/en/latest/) for testing. To run
-the tests first create a `/tmp/input/` directory and place your image containing the `.SAFE` file in this directory. 
-Therefore the input image will be read from the `/tmp/input/` directory. Then do as following:
+the tests, first create a `/tmp/input/` directory and place your image which contains the `.SAFE` file in this directory. 
+Please note that the input image should be the outcome of the `Sentinel-2 L1C MSI Full Scenes` data block which contains a
+``data.json``. This ``data.json`` file is needed for running the test file correctly.
+Also, the input image will be read from the `/tmp/input/` directory. Finally to run the test, do as following:
 
 ```bash
 ./s2-superresolution/blocks/s2-superresolution/test.sh
 ```
 
-from the repository top directory.
+### Build and run the docker image locally
 
-#### Build the processing block Docker image 
-
-To build the Docker image for local testing and/or publishing on the UP42
-platform you can run the following shell commands from the repository
-top directory:
+To build the Docker image for local using you can run the following shell command from the repository
+that contains the Dockerfile: 
 
 ```bash
-cd blocks/s2-superresolution/
+cd s2-superresolution/blocks/s2-superresolution/
 # Build the image.
-docker build -t s2-superresolution/-f Dockerfile . --build-arg manifest="$(cat UP42Manifest.json)"
-# Go back to the top directory.
-cd -
+docker build -t s2-superresolution/-f Dockerfile .
 ```
+In the next step you can use the params.json file to define whether you want to work with the whole image or 
+a subset of the image by modifying the ``roi_x_y`` or ``roi_lon_lat`` (which is a `list` of coordinates).
+You can also choose whether you want to keep the original spectral bands of 10m resolution of the input image or not. 
+Please note that you can add or remove ``roi_x_y`` or ``roi_lon_lat`` based on your preferences.
+
+An example of params.json file is shown below:
+``
+{
+  "roi_x_y": [5000,5000,5500,5500],
+  "copy_original_bands": false
+}
+``
 
 #### Run the processsing block 
 
@@ -108,10 +117,9 @@ cd -
  * Build the docker image as outlined above.
  * Run the following command: 
  
-```bash
-docker run --mount type=bind,src=/tmp/output,dst=/tmp/output --mount type=bind,src=/tmp/input,dst=/tmp/input s2-superresolution:latest
-``` 
-
+```
+ docker run -u -e UP42_TASK_PARAMETERS="$(cat params.json)" --mount type=bind,src=/tmp/output,dst=/tmp/output --mount type=bind,src=/tmp/input,dst=/tmp/input superresolution:latest
+```
 This [bind mounts](https://docs.docker.com/storage/bind-mounts/) the
 host and container `/tmp/input` and `/tmp/output` directories into the
 **input** and **output** directories respectively. If you wish you can
@@ -127,6 +135,19 @@ with your UP42 user ID (`<user_id>`) and password:
 ```bash
 docker login -u <user_id> registry.up42.com
 ``` 
+
+To build the Docker image for publishing on the UP42
+platform you can run the following shell commands from the repository
+that contains the Dockerfile:
+
+```bash
+cd s2-superresolution/blocks/s2-superresolution/
+# Build the image.
+docker build . \
+     -t registry.up42.com/some-example-user-id/s2-superresolution:latest \
+     --build-arg manifest="$(<UP42Manifest.json)"
+```
+
 #### Push the block to the registry
 
 Push your block as a Docker image to the UP42 registry like this: 
