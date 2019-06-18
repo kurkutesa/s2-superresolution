@@ -1,14 +1,13 @@
 # s2-superresolution on UP42
 ## Introduction
 
-This is a simple instructional proof-of-concept of using [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network) 
-algorithm to drive higher resolution images from the existing lower resolution images to provide 
-a very simple demo of what is possible to do using UP42.
+This is a state of the are processing block using a [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network) 
+algorithm to derive higher resolution images from existing lower resolution images using Sentinel-2 datasets as input.
+The code is adapted from https://github.com/lanha/DSen2, our thanks go to the authors of the original code base and the 
+corresponding paper.
 
-The goal of this project is to guide you through setting UP42 in your
-geospatial pipeline. It shows how easy it is to setup a CNN
-algorithm implemented in [TensorFlow](https://tensorflow.org) to
-perform CNN.
+Another goal of this project is to help users setting up their [TensorFlow](https://tensorflow.org) based algorithms on
+[UP42](https://up42.com).
 
 ## Block description
 
@@ -18,10 +17,10 @@ description in terms of the UP42 core concepts.
 
 * Block type: processing
 * Supported input types:
-  * [SENTINEL2_L1C](https://specs.up42.com/v1/blocks/schema.json) 
-  (any geo-referenced [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF))
+  * [SENTINEL2_L1C](https://docs.up42.com/up42-blocks/sobloo-s2-l1c.html)   
+* Output type: AOIClipped (any geo-referenced [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF))
 * Provider: [UP42](https://up42.com)
-* Tags: machine learning, data processing, analytics
+* Tags: machine learning, deep learning, data processing, analytics
 
 ## Requirements
 
@@ -46,11 +45,11 @@ then do `cd <directory>`.
 #### Install the required libraries
 First create a virtual environment either by using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) 
 or [virtualenv](https://virtualenv.pypa.io/en/latest/).
-In the case of using the virtualenvwrapper do:
+In the case of using virtualenvwrapper do:
 
 ```mkvirtualenv --python=$(which python3.7) up42-supres```
 
-In the case of using the virtualenv do:
+In the case of using virtualenv do:
 
 ````
 virtualenv -p $(which python3.7) up42-supres
@@ -59,30 +58,34 @@ virtualenv -p $(which python3.7) up42-supres
 After creating a virtual environment and activating it, all the necessary libraries can be installed on this environment by doing:
 
 ```bash
-./s2-superresolution/blocks/s2_superresolution/setup.sh
+cd s2-superresolution/blocks/s2_superresolution/
+./setup.sh
 ```
 #### Create the super resolution image using the trained network
 
-The trained network can be used directly on downloaded Sentinel-2 tiles. for more details, see in the s2_tiles_supres.py file.
+The trained network can be used directly on downloaded Sentinel-2 tiles. For more details, see in the s2_tiles_supres.py file.
 
-
-The code use the .xml file of the uzipped S2 tile. The output image will be saved with a `.tif` extension which is easily readable by QGIS.
-You need to create a `/tmp/output/` so that the output image will be written into this directory.
-If you want to also copy the original high resolution (10m bands) you can do so, with tuning the parameter `copy_original_bands` in the Up42Manifest.json and choose default to be `yes`.
-The source code also predict the lowest resolution bands (60m) by default, so that the output image will include high resolution (10m) for all the exiting bands
-within 20m and 60m resolutions.
+The code use the .xml file of the unzipped S2 tile. The output image will be saved with a `.tif` extension which is
+easily readable by GIS packages such as QGIS (https://www.qgis.org/).
+You need to create a `/tmp/output/` folder so that the output image can be written into this directory.
+If you want to also copy the original high resolution (10m bands) you can do so, with tuning the parameter
+`copy_original_bands` in the Up42Manifest.json and choose default to be `yes`.
+The source code also predict the lowest resolution bands (60m) by default, so that the output image will include high
+resolution (10m) for all the exiting bands within 20m and 60m resolutions.
 
 
 ### Run the tests
 
-This project uses [pytest](https://docs.pytest.org/en/latest/) for testing. To run
-the tests, first create a `/tmp/input/` directory and place your image which contains the `.SAFE` file in this directory. 
+This project uses [pytest](https://docs.pytest.org/en/latest/) for testing. It is necessary to provde a Sentinel-2
+dataset in SAFE format.  
 Please note that the input image should be the outcome of the `Sentinel-2 L1C MSI Full Scenes` data block which contains a
 ``data.json``. This ``data.json`` file is needed for running the test file correctly.
-Also, the output image will be read from the `/tmp/output/` directory. Finally, to run the test do as following:
+To run the tests, first create a `/tmp/input/` directory and place the result of the mentioned data block ( which
+includes a `.SAFE` file) in this directory. 
+The output image will be read from the `/tmp/output/` directory. Finally, to run the test do as following:
 
 ```bash
-./s2-superresolution/blocks/s2-superresolution/test.sh
+./test.sh
 ```
 
 ### Build and run the docker image locally
