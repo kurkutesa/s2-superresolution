@@ -16,8 +16,8 @@ from rasterio.windows import Window
 from rasterio import Affine as A
 import pyproj as proj
 from supres import dsen2_20, dsen2_60
-from helper import get_logger, load_metadata, load_params, \
-        save_result, SENTINEL2_L1C, ensure_data_directories_exist
+from helper import (get_logger, load_metadata, load_params, save_result, SENTINEL2_L1C,
+                    ensure_data_directories_exist)
 
 LOGGER = get_logger(__name__)
 
