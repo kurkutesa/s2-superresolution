@@ -263,7 +263,7 @@ class Superresolution:
         """
         This method takes the raster data at 10,
         20, and 60 m resolutions and by applying
-        fata_final method creates the input data
+        data_final method creates the input data
         for the the convolutional neural network.
         It returns 10 m resolution for all
         the bands in 20 and 60 m resolutions.
@@ -350,7 +350,6 @@ class Superresolution:
         s_r, validated_sr_bands, validated_desc_all, profile = \
             srr.run_model(ds10, ds20, ds60)
         filename = os.path.join(srr.output_dir, output_name)
-        LOGGER.info("Writing")
-        LOGGER.info(" the super-resolved bands in")
+        LOGGER.info("Now writing the super-resolved bands")
         save_result(s_r, validated_sr_bands, validated_desc_all,
                     profile, output_jsonfile, srr.output_dir, filename)

@@ -82,7 +82,7 @@ Please note that the input image should be the outcome of the `Sentinel-2 L1C MS
 ``data.json``. This ``data.json`` file is needed for running the test file correctly.
 To run the tests, first create a `/tmp/input/` directory and place the result of the mentioned data block ( which
 includes a `.SAFE` file) in this directory. 
-The output image will be read from the `/tmp/output/` directory. Finally, to run the test do as following:
+The output image will be written to the `/tmp/output/` directory. Finally, to run the test do as following:
 
 ```bash
 ./test.sh

@@ -3,6 +3,7 @@ This module creates the super-resolution image based on the trained CNN defined 
 """
 import sys
 import os
+
 import numpy as np
 
 #pylint: disable=wrong-import-position
