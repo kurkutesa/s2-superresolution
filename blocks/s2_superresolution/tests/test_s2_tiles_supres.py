@@ -5,6 +5,7 @@ import glob
 import os
 import rasterio
 import pytest
+import mock
 
 from context import Superresolution
 
@@ -20,7 +21,8 @@ def fixture_1():
     This method initiates the Superresolution class from s2_tiles_supres to be
     used to testing.
     """
-    return Superresolution()
+    params = {'roi_x_y': [5000, 5000, 5500, 5500]}
+    return Superresolution(params)
 
 
 # pylint: disable-msg=too-many-locals
@@ -50,12 +52,13 @@ def test_desc(fixture_1):
 
 
 @pytest.fixture(scope="session", autouse=True)
+@mock.patch.dict(os.environ, {"UP42_TASK_PARAMETERS": '{"roi_x_y": [5000, 5000, 5500, 5500]}'})
 def fixture_2():
     """
     This method initiates the Superresolution class from s2_tiles_supres and apply the run
     method on it to produce an output image.
     """
-    Superresolution().run()
+    Superresolution.run()
     for out_file in glob.iglob(os.path.join('/tmp/output/', '*.tif'), recursive=True):
         output_image_path = out_file
     return rasterio.open(output_image_path)

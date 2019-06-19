@@ -33,7 +33,7 @@ class Superresolution:
     """
 
     def __init__(self,
-                 params,
+                 params: dict,
                  output_dir: str = '/tmp/output/',
                  input_dir: str = '/tmp/input/',
                  data_folder: str = '*/MTD*.xml'):
@@ -43,7 +43,20 @@ class Superresolution:
         :param data_folder: The original image file.
         """
 
-        #TODO set params like roi and copy_original_bands here, then use as object variables
+        self.params = params
+        try:
+            params['copy_original_bands']
+        except KeyError:
+            params['copy_original_bands'] = False
+        try:
+            params['roi_x_y']
+        except KeyError:
+            params['roi_x_y'] = None
+        try:
+            params['roi_lon_lat']
+        except KeyError:
+            params['roi_lon_lat'] = None
+
         self.output_dir = output_dir
         self.input_dir = input_dir
         self.data_folder = data_folder
@@ -150,12 +163,11 @@ class Superresolution:
         """
         This method returns the coordinates that define the desired area of interest.
         """
-        params = load_params()
-        if 'roi_x_y' in [*params]:
-            roi_x1, roi_y1, roi_x2, roi_y2 = params.get('roi_x_y')
+        if self.params['roi_x_y'] is not None:
+            roi_x1, roi_y1, roi_x2, roi_y2 = self.params.get('roi_x_y')
             xmi, ymi, xma, yma, area = self.get_max_min(roi_x1, roi_y1, roi_x2, roi_y2, data)
-        elif 'roi_lon_lat' in [*params]:
-            roi_lon1, roi_lat1, roi_lon2, roi_lat2 = params.get('roi_lon_lat')
+        elif self.params['roi_lon_lat'] is not None:
+            roi_lon1, roi_lat1, roi_lon2, roi_lat2 = self.params.get('roi_lon_lat')
             x_1, y_1 = self.to_xy(roi_lon1, roi_lat1, data)
             x_2, y_2 = self.to_xy(roi_lon2, roi_lat2, data)
             xmi, ymi, xma, yma, area = self.get_max_min(x_1, y_1, x_2, y_2, data)
@@ -317,16 +329,15 @@ class Superresolution:
         p_r = self.update(d_1, data10.shape, sr_final, xmin, ymin)
         return sr_final, validated_sr_final_bands, validated_descriptions_all, p_r
 
-    @staticmethod
-    def update(data, size_10m: Tuple, model_output: np.ndarray, xmi: int, ymi: int):
+    # pylint: disable-msg=too-many-arguments
+    def update(self, data, size_10m: Tuple, model_output: np.ndarray, xmi: int, ymi: int):
         """
         This method creates the proper georeferencing for the output image.
         :param data: The raster file for 10m resolution.
 
         """
         # Here based on the params.json file, the output image dimension will be calculated.
-        params = load_params()  # type: dict
-        if params['copy_original_bands'] == 'true':
+        if self.params['copy_original_bands'] == 'true':
             out_dims = size_10m[2] + model_output.shape[2]
         else:
             out_dims = model_output.shape[2]
@@ -347,7 +358,7 @@ class Superresolution:
         This method is the main entry point for this processing block
         """
         ensure_data_directories_exist()
-        params: dict = load_params()
+        params = load_params()  # type: dict
         srr = Superresolution(params)
         ds10, ds20, ds60, output_jsonfile, output_name = srr.get_data()
         s_r, validated_sr_bands, validated_desc_all, profile = \

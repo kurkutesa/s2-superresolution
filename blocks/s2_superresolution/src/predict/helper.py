@@ -55,7 +55,7 @@ def load_params() -> dict:
     Get the parameters for the current task directly from the task parameters.
     """
     helper_logger = get_logger(__name__)
-    data: str = os.environ.get("UP42_TASK_PARAMETERS", '{}')
+    data = os.environ.get("UP42_TASK_PARAMETERS", '{}')  # type: str
     helper_logger.debug("Fetching parameters for this block: %s", data)
     if data == "":
         data = "{}"
