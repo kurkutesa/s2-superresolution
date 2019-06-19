@@ -55,10 +55,10 @@ def load_params() -> dict:
     Get the parameters for the current task directly from the task parameters.
     """
     helper_logger = get_logger(__name__)
-    data = os.environ.get("UP42_TASK_PARAMETERS", '{}')
-    helper_logger.debug("Fetching parameters for this blocks: %s", data)
-    if data == '{}':
-        data = '{"roi_x_y": [5000,5000,5500,5500], "copy_original_bands": "false"}'
+    data: str = os.environ.get("UP42_TASK_PARAMETERS", '{}')
+    helper_logger.debug("Fetching parameters for this block: %s", data)
+    if data == "":
+        data = "{}"
     return json.loads(data)
 
 

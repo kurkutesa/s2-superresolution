@@ -32,7 +32,9 @@ class Superresolution:
     bands for 20m and 60m resolution.
     """
 
-    def __init__(self, output_dir: str = '/tmp/output/',
+    def __init__(self,
+                 params,
+                 output_dir: str = '/tmp/output/',
                  input_dir: str = '/tmp/input/',
                  data_folder: str = '*/MTD*.xml'):
         """
@@ -40,6 +42,8 @@ class Superresolution:
         :param input_dir: The directory of the original image.
         :param data_folder: The original image file.
         """
+
+        #TODO set params like roi and copy_original_bands here, then use as object variables
         self.output_dir = output_dir
         self.input_dir = input_dir
         self.data_folder = data_folder
@@ -343,7 +347,8 @@ class Superresolution:
         This method is the main entry point for this processing block
         """
         ensure_data_directories_exist()
-        srr = Superresolution()
+        params: dict = load_params()
+        srr = Superresolution(params)
         ds10, ds20, ds60, output_jsonfile, output_name = srr.get_data()
         s_r, validated_sr_bands, validated_desc_all, profile = \
             srr.run_model(ds10, ds20, ds60)
