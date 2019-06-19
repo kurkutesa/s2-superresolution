@@ -96,7 +96,8 @@ that contains the Dockerfile:
 ```bash
 cd s2-superresolution/blocks/s2-superresolution/
 # Build the image.
-docker build -t s2-superresolution/-f Dockerfile .
+docker build -t s2-superresolution -f Dockerfile . --build-arg manifest="$(cat UP42Manifest.json)"
+
 ```
 In the next step you can use the params.json file to define whether you want to work with the whole image or 
 a subset of the image by modifying the ``roi_x_y`` or ``roi_lon_lat`` (which is a `list` of coordinates).
@@ -112,7 +113,7 @@ An example of params.json file is shown below:
 }
 ``
 
-#### Run the processsing block 
+#### Run the processing block 
 
  * Make sure you have created the block input `/tmp/input` and output directories `/tmp/output`.
  * Copy the input data form the unzipped s2 file (along with the
