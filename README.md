@@ -38,7 +38,7 @@ description in terms of the UP42 core concepts.
 Clone the repository in a given `<directory>`:
 
 ```bash
-git clone https://github.com/up42/s2-superresolutiongit <directory>
+git clone https://github.com/up42/s2-superresolution.git <directory>
 ``` 
 
 then do `cd <directory>`.
