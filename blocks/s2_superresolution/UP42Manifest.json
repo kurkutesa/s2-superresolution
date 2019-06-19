@@ -22,7 +22,7 @@
         "up42.data.scene.sentinel2_l1c": {}
     },
     "output_capabilities": {
-        "custom.processing.superresolution": {}
+        "up42.data.aoiclipped": {}
     }
 }
 
