@@ -62,6 +62,7 @@ class Superresolution:
         self.input_dir = input_dir
         self.data_folder = data_folder
 
+    # pylint: disable-msg=too-many-locals
     def get_data(self) -> Tuple:
         """
         This method returns the raster data set of original image for
