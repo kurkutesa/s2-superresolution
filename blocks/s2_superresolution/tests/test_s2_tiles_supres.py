@@ -3,6 +3,7 @@ This module include multiple test cases to check the performance of the s2_tiles
 """
 import glob
 import os
+import json
 import rasterio
 import pytest
 import mock
@@ -53,7 +54,7 @@ def test_desc(fixture_1):
 
 @pytest.fixture(scope="session", autouse=True)
 @mock.patch.dict(os.environ, {"UP42_TASK_PARAMETERS": '{"roi_x_y": [5000, 5000, 5500, 5500]}'})
-def fixture_2():
+def fixture_2() -> list:
     """
     This method initiates the Superresolution class from s2_tiles_supres and apply the run
     method on it to produce an output image.
@@ -61,7 +62,9 @@ def fixture_2():
     Superresolution.run()
     for out_file in glob.iglob(os.path.join('/tmp/output/', '*.tif'), recursive=True):
         output_image_path = out_file
-    return rasterio.open(output_image_path)
+    for json_out_file in glob.iglob(os.path.join('/tmp/output/', '*.json'), recursive=True):
+        output_json_path = json_out_file
+    return [output_image_path, output_json_path]
 
 
 # pylint: disable=redefined-outer-name
@@ -70,8 +73,9 @@ def test_output_transform(fixture_2):
     This method checks whether the outcome image has the correct 10m resolution for
     all the spectral bands.
     """
-    assert fixture_2.transform[0] == 10
-    assert fixture_2.transform[4] == -10
+    output_image = rasterio.open(fixture_2[0])
+    assert output_image.transform[0] == 10
+    assert output_image.transform[4] == -10
 
 
 # pylint: disable=redefined-outer-name
@@ -80,10 +84,11 @@ def test_output_description(fixture_2):
     This method checks whether the outcome image has all the spectral bands for
     20m and 60m resolutions.
     """
+    output_image = rasterio.open(fixture_2[0])
     desc_exm = ('SR B5 (705 nm)', 'SR B6 (740 nm)',
                 'SR B7 (783 nm)', 'SR B8A (865 nm)', 'SR B11 (1610 nm)',
                 'SR B12 (2190 nm)', 'SR B1 (443 nm)', 'SR B9 (945 nm)')
-    assert fixture_2.descriptions == desc_exm
+    assert output_image.descriptions == desc_exm
 
 
 # pylint: disable=redefined-outer-name
@@ -91,6 +96,15 @@ def test_output_projection(fixture_1, fixture_2):
     """
     This method checks whether the outcome image has the correct georeference.
     """
+    output_image = rasterio.open(fixture_2[0])
     ds10r, ds20r, ds60r, output_jsonfile, output_name = fixture_1.get_data()
     crs_exm = fixture_1.get_utm(ds10r)
-    assert fixture_2.crs == crs_exm
+    assert output_image.crs == crs_exm
+
+
+def test_output_json_file(fixture_2):
+    """This method check whether the data.json of output image is created correctly."""
+    with open(fixture_2[1]) as f_p:
+        data = json.loads(f_p.read())
+
+    assert 'features' in [*data]
