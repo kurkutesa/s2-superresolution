@@ -79,9 +79,7 @@ class Superresolution:
         return d_1, d_2, d_6, out_feature, path_to_output_img
 
     @staticmethod
-    # pylint: disable-msg=too-many-locals
     def get_max_min(x_1: int, y_1: int, x_2: int, y_2: int, data) -> Tuple:
-        # pylint: disable = R0914
         """
         This method gets pixels' location for the region of interest on the 10m bands
         and returns the min/max in each direction and to nearby 60m pixel boundaries and the area

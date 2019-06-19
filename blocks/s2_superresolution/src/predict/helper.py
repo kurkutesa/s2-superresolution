@@ -1,5 +1,5 @@
 """
-This module includes necessary helper functions that is used in the s2_tiles_supres script.
+This module includes necessary helper functions that are used in the s2_tiles_supres script.
 """
 import logging
 import os
@@ -52,8 +52,7 @@ def load_metadata() -> FeatureCollection:
 
 def load_params() -> dict:
     """
-    Get the parameters for the current task directly from the task parameters. If
-    the task parameters are not set, falls back to the old INTERSTELLAR_JOB_INPUTS.
+    Get the parameters for the current task directly from the task parameters.
     """
     helper_logger = get_logger(__name__)
     data = os.environ.get("UP42_TASK_PARAMETERS", '{}')

@@ -18,7 +18,7 @@ description in terms of the UP42 core concepts.
 * Block type: processing
 * Supported input types:
   * [SENTINEL2_L1C](https://docs.up42.com/up42-blocks/sobloo-s2-l1c.html)   
-* Output type: AOIClipped (any geo-referenced [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF))
+* Output type: AOIClipped (geo-referenced [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF))
 * Provider: [UP42](https://up42.com)
 * Tags: machine learning, deep learning, data processing, analytics
 
