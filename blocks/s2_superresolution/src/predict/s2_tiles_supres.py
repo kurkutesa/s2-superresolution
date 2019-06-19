@@ -76,7 +76,7 @@ class Superresolution:
             path_to_output_img = Path(path_to_input_img).stem + \
                 '_superresolution.tif'
             out_feature = feature.copy()
-            out_feature["properties"]["custom.processing.superresolution"] =\
+            out_feature["properties"]["up42.data.aoiclipped"] =\
                 path_to_output_img
         for file in glob.iglob(os.path.join(self.input_dir, str(path_to_input_img),
                                             self.data_folder), recursive=True):
