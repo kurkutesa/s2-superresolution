@@ -11,6 +11,7 @@ from pathlib import Path
 import glob
 
 import numpy as np
+from geojson import FeatureCollection
 import rasterio
 from rasterio.windows import Window
 from rasterio import Affine as A
@@ -71,6 +72,7 @@ class Superresolution:
         path_to_input_img = None
         data_path = None
         input_metadata = load_metadata()
+        feature_list = []
         for feature in input_metadata.features:
             path_to_input_img = feature["properties"][SENTINEL2_L1C]
             path_to_output_img = Path(path_to_input_img).stem + \
@@ -78,6 +80,9 @@ class Superresolution:
             out_feature = feature.copy()
             out_feature["properties"]["up42.data.aoiclipped"] =\
                 path_to_output_img
+            feature_list.append(out_feature)
+        out_fc = FeatureCollection(feature_list)
+
         for file in glob.iglob(os.path.join(self.input_dir, str(path_to_input_img),
                                             self.data_folder), recursive=True):
             data_path = file
@@ -93,7 +98,7 @@ class Superresolution:
             elif '60m' in dsdesc:
                 d_6 = rasterio.open(dsdesc)
 
-        return d_1, d_2, d_6, out_feature, path_to_output_img
+        return d_1, d_2, d_6, out_fc, path_to_output_img
 
     @staticmethod
     def get_max_min(x_1: int, y_1: int, x_2: int, y_2: int, data) -> Tuple:
