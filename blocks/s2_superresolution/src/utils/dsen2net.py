@@ -5,6 +5,10 @@ from keras.models import Model, Input
 from keras.layers import Conv2D, Concatenate, Activation, Lambda, Add
 import keras.backend as K
 
+# This code is adapted from this repository
+# https://github.com/lanha/DSen2 and is distributed under the same
+# license.
+
 K.set_image_data_format('channels_first')
 
 
