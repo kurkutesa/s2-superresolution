@@ -15,6 +15,9 @@ from predict.helper import get_logger
 
 LOGGER = get_logger(__name__)
 
+# This code is adapted from this repository
+# https://github.com/lanha/DSen2 and is distributed under the same
+# license.
 
 def interp_patches(image_20, image_10_shape) -> np.ndarray:
     """
