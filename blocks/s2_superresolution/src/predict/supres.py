@@ -18,6 +18,9 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../.
 MDL_PATH = 'weights/'
 LOGGER = get_logger(__name__)
 
+# This code is adapted from this repository
+# https://github.com/lanha/DSen2 and is distributed under the same
+# license.
 
 def dsen2_20(d10, d20, deep=False) -> np.ndarray:
     """
