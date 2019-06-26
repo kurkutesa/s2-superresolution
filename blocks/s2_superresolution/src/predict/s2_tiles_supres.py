@@ -23,7 +23,7 @@ from helper import (get_logger, load_metadata, load_params, save_result, SENTINE
 LOGGER = get_logger(__name__)
 
 # This code is adapted from this repository
-# http://nicolas.brodu.net/code/superres and is distributed under the same
+# https://github.com/lanha/DSen2 and is distributed under the same
 # license.
 
 
