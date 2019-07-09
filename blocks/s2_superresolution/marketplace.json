@@ -5,8 +5,8 @@
   "iconUrl": "https://storage.googleapis.com/metadata-interstellar-staging/UP42_Blocks/Tiling/Avatar.jpg",
   "pricingStrategy": {
     "type": "MEGABYTE_INPUT",
-    "credits": 1
-  "publicVersion": "",
+    "credits": 1,
+  "publicVersion": "1.0.0",
   "iconUrl": "https://storage.googleapis.com/metadata-interstellar-staging/UP42_Blocks/Tiling/Avatar.jpg",
   "pricingStrategy": {
     "type": "MEGABYTE_INPUT",
