@@ -1,5 +1,6 @@
 """
-This module includes necessary helper functions that are used in the s2_tiles_supres script.
+This module includes necessary helper functions that are used in the s2_tiles_supres
+and test_snap_polarimetry scripts.
 """
 import logging
 import os
