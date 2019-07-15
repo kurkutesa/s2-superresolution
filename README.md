@@ -123,7 +123,7 @@ An example of params.json file is shown below:
  * Run the following command: 
  
 ```
- docker run -u -e UP42_TASK_PARAMETERS="$(cat params.json)" --mount type=bind,src=/tmp/output,dst=/tmp/output --mount type=bind,src=/tmp/input,dst=/tmp/input superresolution:latest
+ docker run -e UP42_TASK_PARAMETERS="$(cat params.json)" --mount type=bind,src=/tmp/output,dst=/tmp/output --mount type=bind,src=/tmp/input,dst=/tmp/input superresolution:latest
 ```
 This [bind mounts](https://docs.docker.com/storage/bind-mounts/) the
 host and container `/tmp/input` and `/tmp/output` directories into the
