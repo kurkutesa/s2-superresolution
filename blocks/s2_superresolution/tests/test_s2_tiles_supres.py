@@ -8,7 +8,7 @@ import rasterio
 import pytest
 import mock
 
-from context import Superresolution
+from context import Superresolution, load_params
 
 INPUT_FOLDER = '/tmp/input/'
 DATA_FOLDER = '*/*/MTD*.xml'
@@ -59,7 +59,8 @@ def fixture_2() -> list:
     This method initiates the Superresolution class from s2_tiles_supres and apply the run
     method on it to produce an output image.
     """
-    Superresolution.run()
+    params = load_params()  # type: dict
+    Superresolution(params).run()
     for out_file in glob.iglob(os.path.join('/tmp/output/', '*.tif'), recursive=True):
         output_image_path = out_file
     for json_out_file in glob.iglob(os.path.join('/tmp/output/', '*.json'), recursive=True):
