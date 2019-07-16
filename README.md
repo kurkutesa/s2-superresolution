@@ -149,7 +149,7 @@ that contains the Dockerfile:
 cd s2-superresolution/blocks/s2-superresolution/
 # Build the image.
 docker build . \
-     -t registry.up42.com/some-example-user-id/s2-superresolution:latest \
+     -t registry.up42.com/some-example-user-id/superresolution:latest \
      --build-arg manifest="$(<UP42Manifest.json)"
 ```
 
@@ -158,7 +158,7 @@ docker build . \
 Push your block as a Docker image to the UP42 registry like this: 
 
 ```bash
-docker push registry.up42.com/<user_id>/s2-superresolution:latest
+docker push registry.up42.com/<user_id>/superresolution:latest
 ```
 
 Learn more about creating and publishing blocks by reading our
