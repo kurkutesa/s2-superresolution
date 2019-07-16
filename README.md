@@ -96,7 +96,7 @@ that contains the Dockerfile:
 ```bash
 cd s2-superresolution/blocks/s2-superresolution/
 # Build the image.
-docker build -t s2-superresolution -f Dockerfile . 
+docker build -t superresolution -f Dockerfile . 
 
 ```
 In the next step you can use the params.json file to define whether you want to work with the whole image or 
