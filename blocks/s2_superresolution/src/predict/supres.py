@@ -5,6 +5,7 @@ import sys
 import os
 
 import numpy as np
+import tensorflow as tf
 
 #pylint: disable=wrong-import-position
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
@@ -74,6 +75,7 @@ def dsen2_60(d10, d20, d60, deep=False) -> np.ndarray:
 
 def _predict(test, input_shape, deep=False, run_60=False):
     # create model
+    tf.Session(config=tf.ConfigProto(log_device_placement=True))
     if deep:
         model = s2model(input_shape, num_layers=32, feature_size=256)
         predict_file = MDL_PATH+'s2_034_lr_1e-04.hdf5' if\
