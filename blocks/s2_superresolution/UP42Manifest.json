@@ -16,7 +16,7 @@
         "copy_original_bands": {"type":  "boolean", "default":  false}
     },
     "machine": {
-	    "type": "xlarge"
+	    "type": "gpu_nvidia_tesla_k80"
     },
     "input_capabilities": {
         "up42.data.scene.sentinel2_l1c": {}
