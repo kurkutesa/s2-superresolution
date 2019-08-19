@@ -1,7 +1,7 @@
 # s2-superresolution on UP42
 ## Introduction
 
-This is a state of the are processing block using a [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network) 
+This is a state of the art processing block using a [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network) 
 algorithm to derive higher resolution images from existing lower resolution images using Sentinel-2 datasets as input.
 The code is adapted from https://github.com/lanha/DSen2, our thanks go to the authors of the original code base and the 
 corresponding paper.
