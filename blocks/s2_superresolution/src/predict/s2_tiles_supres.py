@@ -63,15 +63,12 @@ class Superresolution:
         self.data_folder = data_folder
 
     # pylint: disable-msg=too-many-locals
-    def get_data(self) -> Tuple:
+    @staticmethod
+    def get_final_json() -> FeatureCollection:
         """
-        This method returns the raster data set of original image for
-        all the available resolutions and the geojson file.
-        :param input_loc: The directory to the original image.
-
+        This method return an output json file.
         """
         path_to_input_img = None
-        data_path = None
         input_metadata = load_metadata()
         feature_list = []
         for feature in input_metadata.features:
@@ -84,7 +81,15 @@ class Superresolution:
             feature_list.append(out_feature)
         out_fc = FeatureCollection(feature_list)
 
-        for file in glob.iglob(os.path.join(self.input_dir, str(path_to_input_img),
+        return out_fc
+
+    def get_data(self, image_id) -> Tuple:
+        """
+        This method returns the raster data set of original image for
+        all the available resolutions.
+        """
+        data_path = ''
+        for file in glob.iglob(os.path.join(self.input_dir, str(image_id),
                                             self.data_folder), recursive=True):
             data_path = file
 
@@ -99,7 +104,7 @@ class Superresolution:
             elif '60m' in dsdesc:
                 d_6 = rasterio.open(dsdesc)
 
-        return d_1, d_2, d_6, out_fc, path_to_output_img
+        return d_1, d_2, d_6
 
     @staticmethod
     def get_max_min(x_1: int, y_1: int, x_2: int, y_2: int, data) -> Tuple:
@@ -279,7 +284,7 @@ class Superresolution:
         return d_final
 
     # pylint: disable-msg=too-many-locals
-    def run_model(self, d_1, d_2, d_6) -> Tuple:
+    def run_model(self):
         """
         This method takes the raster data at 10,
         20, and 60 m resolutions and by applying
@@ -292,48 +297,60 @@ class Superresolution:
         :param d_6: Raster data at 60m resolution.
 
         """
-        xmin, ymin, xmax, ymax, interest_area = self.area_of_interest(d_1)
-        LOGGER.info("Selected pixel region:")
-        LOGGER.info('xmin = %s', xmin)
-        LOGGER.info('ymin = %s', ymin)
-        LOGGER.info('xmax = %s', xmax)
-        LOGGER.info('ymax = %s', ymax)
-        LOGGER.info('The area of selected region = %s', interest_area)
-        if xmax < xmin or ymax < ymin:
-            LOGGER.info("Invalid region of interest / UTM Zone combination")
-            sys.exit(0)
+        input_metadata = load_metadata()
+        for feature in input_metadata.features:
+            path_to_input_img = feature["properties"][SENTINEL2_L1C]
+            path_to_output_img = Path(path_to_input_img).stem + \
+                                 '_superresolution.tif'
 
-        LOGGER.info("Selected 10m bands:")
-        validated_10m_bands, validated_10m_indices, dic_10m = self.validate(d_1)
+            d_1, d_2, d_6 = self.get_data(path_to_input_img)
 
-        LOGGER.info("Selected 20m bands:")
-        validated_20m_bands, validated_20m_indices, dic_20m = self.validate(d_2)
+            xmin, ymin, xmax, ymax, interest_area = self.area_of_interest(d_1)
+            LOGGER.info("Selected pixel region:")
+            LOGGER.info('xmin = %s', xmin)
+            LOGGER.info('ymin = %s', ymin)
+            LOGGER.info('xmax = %s', xmax)
+            LOGGER.info('ymax = %s', ymax)
+            LOGGER.info('The area of selected region = %s', interest_area)
+            if xmax < xmin or ymax < ymin:
+                LOGGER.info("Invalid region of interest / UTM Zone combination")
+                sys.exit(0)
 
-        LOGGER.info("Selected 60m bands:")
-        validated_60m_bands, validated_60m_indices, dic_60m = self.validate(d_6)
+            LOGGER.info("Selected 10m bands:")
+            validated_10m_bands, validated_10m_indices, dic_10m = self.validate(d_1)
 
-        validated_descriptions_all = {**dic_10m, **dic_20m, **dic_60m}
+            LOGGER.info("Selected 20m bands:")
+            validated_20m_bands, validated_20m_indices, dic_20m = self.validate(d_2)
 
-        data10 = self.data_final(d_1, validated_10m_indices,
-                                 xmin, ymin, xmax, ymax, 1)
-        data20 = self.data_final(d_2, validated_20m_indices,
-                                 xmin // 2, ymin // 2, xmax // 2, ymax // 2, 1 // 2)
-        data60 = self.data_final(d_6, validated_60m_indices,
-                                 xmin // 6, ymin // 6, xmax // 6, ymax // 6, 1 // 6)
+            LOGGER.info("Selected 60m bands:")
+            validated_60m_bands, validated_60m_indices, dic_60m = self.validate(d_6)
 
-        if validated_60m_bands and validated_20m_bands and validated_10m_bands:
-            LOGGER.info("Super-resolving the 60m data into 10m bands")
-            sr60 = dsen2_60(data10, data20, data60, deep=False)
-            LOGGER.info("Super-resolving the 20m data into 10m bands")
-            sr20 = dsen2_20(data10, data20, deep=False)
-            sr_final = np.concatenate((sr20, sr60), axis=2)
-            validated_sr_final_bands = validated_20m_bands + validated_60m_bands
-        else:
-            LOGGER.info("No super-resolution performed, exiting")
-            sys.exit(0)
+            validated_descriptions_all = {**dic_10m, **dic_20m, **dic_60m}
 
-        p_r = self.update(d_1, data10.shape, sr_final, xmin, ymin)
-        return sr_final, validated_sr_final_bands, validated_descriptions_all, p_r
+            data10 = self.data_final(d_1, validated_10m_indices,
+                                     xmin, ymin, xmax, ymax, 1)
+            data20 = self.data_final(d_2, validated_20m_indices,
+                                     xmin // 2, ymin // 2, xmax // 2, ymax // 2, 1 // 2)
+            data60 = self.data_final(d_6, validated_60m_indices,
+                                     xmin // 6, ymin // 6, xmax // 6, ymax // 6, 1 // 6)
+
+            if validated_60m_bands and validated_20m_bands and validated_10m_bands:
+                LOGGER.info("Super-resolving the 60m data into 10m bands")
+                sr60 = dsen2_60(data10, data20, data60, deep=False)
+                LOGGER.info("Super-resolving the 20m data into 10m bands")
+                sr20 = dsen2_20(data10, data20, deep=False)
+                sr_final = np.concatenate((sr20, sr60), axis=2)
+                validated_sr_final_bands = validated_20m_bands + validated_60m_bands
+            else:
+                LOGGER.info("No super-resolution performed, exiting")
+                sys.exit(0)
+
+            p_r = self.update(d_1, data10.shape, sr_final, xmin, ymin)
+            filename = os.path.join(self.output_dir, path_to_output_img)
+            output_jsonfile = self.get_final_json()
+            LOGGER.info("Now writing the super-resolved bands")
+            save_result(sr_final, validated_sr_final_bands, validated_descriptions_all,
+                        p_r, output_jsonfile, self.output_dir, filename)
 
     # pylint: disable-msg=too-many-arguments
     def update(self, data, size_10m: Tuple, model_output: np.ndarray, xmi: int, ymi: int):
@@ -365,11 +382,4 @@ class Superresolution:
         """
         ensure_data_directories_exist()
         params = load_params()  # type: dict
-        srr = Superresolution(params)
-        ds10, ds20, ds60, output_jsonfile, output_name = srr.get_data()
-        s_r, validated_sr_bands, validated_desc_all, profile = \
-            srr.run_model(ds10, ds20, ds60)
-        filename = os.path.join(srr.output_dir, output_name)
-        LOGGER.info("Now writing the super-resolved bands")
-        save_result(s_r, validated_sr_bands, validated_desc_all,
-                    profile, output_jsonfile, srr.output_dir, filename)
+        Superresolution(params).run_model()
