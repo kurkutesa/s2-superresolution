@@ -3,8 +3,11 @@ This module creates the super-resolution image based on the trained CNN defined 
 """
 import sys
 import os
+import gc
 
 import numpy as np
+from keras.backend.tensorflow_backend import set_session
+import keras.backend as K
 import tensorflow as tf
 
 #pylint: disable=wrong-import-position
@@ -75,7 +78,19 @@ def dsen2_60(d10, d20, d60, deep=False) -> np.ndarray:
 
 def _predict(test, input_shape, deep=False, run_60=False):
     # create model
-    tf.Session(config=tf.ConfigProto(log_device_placement=True))
+    ###################################
+    # TensorFlow wizardry
+    config = tf.ConfigProto()
+
+    # Don't pre-allocate memory; allocate as-needed
+    config.gpu_options.allow_growth = True  # pylint: disable=no-member
+
+    # Only allow a total of half the GPU memory to be allocated
+    config.gpu_options.per_process_gpu_memory_fraction = 0.5  # pylint: disable=no-member
+
+    # Create a session with the above options specified.
+    set_session(tf.Session(config=config))
+    ###################################
     if deep:
         model = s2model(input_shape, num_layers=32, feature_size=256)
         predict_file = MDL_PATH+'s2_034_lr_1e-04.hdf5' if\
@@ -88,4 +103,6 @@ def _predict(test, input_shape, deep=False, run_60=False):
     model.load_weights(predict_file)
     LOGGER.info("Predicting using file: %s", predict_file)
     prediction = model.predict(test, verbose=1)
+    LOGGER.info("This is for releasing memory: %s", gc.collect())
+    K.clear_session()
     return prediction

@@ -298,6 +298,7 @@ class Superresolution:
 
         """
         input_metadata = load_metadata()
+        output_jsonfile = self.get_final_json()
         for feature in input_metadata.features:
             path_to_input_img = feature["properties"][SENTINEL2_L1C]
             path_to_output_img = Path(path_to_input_img).stem + \
@@ -347,10 +348,11 @@ class Superresolution:
 
             p_r = self.update(d_1, data10.shape, sr_final, xmin, ymin)
             filename = os.path.join(self.output_dir, path_to_output_img)
-            output_jsonfile = self.get_final_json()
+
             LOGGER.info("Now writing the super-resolved bands")
             save_result(sr_final, validated_sr_final_bands, validated_descriptions_all,
                         p_r, output_jsonfile, self.output_dir, filename)
+            LOGGER.info("Writing the super-resolved bands is finished.")
 
     # pylint: disable-msg=too-many-arguments
     def update(self, data, size_10m: Tuple, model_output: np.ndarray, xmi: int, ymi: int):
