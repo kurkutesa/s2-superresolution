@@ -8,7 +8,7 @@ import rasterio
 import pytest
 import mock
 
-from context import Superresolution, load_params
+from context import Superresolution, load_params, load_metadata, SENTINEL2_L1C
 
 INPUT_FOLDER = '/tmp/input/'
 DATA_FOLDER = '*/*/MTD*.xml'
@@ -40,7 +40,9 @@ def test_desc(fixture_1):
     validated_20m_bands_exm = ['B5', 'B6', 'B7', 'B8A', 'B11', 'B12']
     validated_60m_indices_exm = [0, 1]
     validated_60m_bands_exm = ['B1', 'B9']
-    ds10r, ds20r, ds60r, output_jsonfile, output_name = fixture_1.get_data()
+    input_metadata = load_metadata()
+    img_id = input_metadata.features[0]["properties"][SENTINEL2_L1C]
+    ds10r, ds20r, ds60r = fixture_1.get_data(img_id)
     validated_10m_bands, validated_10m_indices, dic_10m = fixture_1.validate(ds10r)
     validated_20m_bands, validated_20m_indices, dic_20m = fixture_1.validate(ds20r)
     validated_60m_bands, validated_60m_indices, dic_60m = fixture_1.validate(ds60r)
@@ -98,7 +100,9 @@ def test_output_projection(fixture_1, fixture_2):
     This method checks whether the outcome image has the correct georeference.
     """
     output_image = rasterio.open(fixture_2[0])
-    ds10r, ds20r, ds60r, output_jsonfile, output_name = fixture_1.get_data()
+    input_metadata = load_metadata()
+    img_id = input_metadata.features[0]["properties"][SENTINEL2_L1C]
+    ds10r, ds20r, ds60r = fixture_1.get_data(img_id)
     crs_exm = fixture_1.get_utm(ds10r)
     assert output_image.crs == crs_exm
 
