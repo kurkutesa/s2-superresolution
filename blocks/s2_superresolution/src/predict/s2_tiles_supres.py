@@ -9,6 +9,7 @@ from collections import defaultdict
 from typing import List, Tuple
 from pathlib import Path
 import glob
+import warnings
 
 import numpy as np
 from geojson import FeatureCollection
@@ -68,7 +69,6 @@ class Superresolution:
         """
         This method return an output json file.
         """
-        path_to_input_img = None
         input_metadata = load_metadata()
         feature_list = []
         for feature in input_metadata.features:
@@ -283,8 +283,23 @@ class Superresolution:
                 , 0, 3)[:, :, term]
         return d_final
 
+    def conditional_run(self):
+        """
+        This methods checks whether the number of input
+        image is one. Otherwise it will raise an error.
+        :return:
+        """
+        condition = False
+        input_metadata = load_metadata()
+        if len(input_metadata) > 1:
+            warnings.warn("The number of image is more than one. Only the first"
+                          " image will be processed!")
+            condition = True
+
+        self.run_model(condition)
+
     # pylint: disable-msg=too-many-locals
-    def run_model(self):
+    def run_model(self, condition):
         """
         This method takes the raster data at 10,
         20, and 60 m resolutions and by applying
@@ -295,11 +310,16 @@ class Superresolution:
         :param d_1: Raster data at 10m resolution.
         :param d_2: Raster data at 20m resolution.
         :param d_6: Raster data at 60m resolution.
-
+        :param condition: A flag to make sure only one image will be processed.
         """
-        input_metadata = load_metadata()
+        input_fc = load_metadata().features
         output_jsonfile = self.get_final_json()
-        for feature in input_metadata.features:
+
+        if condition:
+            input_fc = input_fc[0:1]
+            output_jsonfile['features'] = output_jsonfile['features'][0:1]
+
+        for feature in input_fc:
             path_to_input_img = feature["properties"][SENTINEL2_L1C]
             path_to_output_img = Path(path_to_input_img).stem + \
                                  '_superresolution.tif'
@@ -340,11 +360,17 @@ class Superresolution:
                 sr60 = dsen2_60(data10, data20, data60, deep=False)
                 LOGGER.info("Super-resolving the 20m data into 10m bands")
                 sr20 = dsen2_20(data10, data20, deep=False)
-                sr_final = np.concatenate((sr20, sr60), axis=2)
-                validated_sr_final_bands = validated_20m_bands + validated_60m_bands
             else:
                 LOGGER.info("No super-resolution performed, exiting")
                 sys.exit(0)
+
+            if self.params['copy_original_bands']:
+                sr_final = np.concatenate((data10, sr20, sr60), axis=2)
+                validated_sr_final_bands = validated_10m_bands\
+                                           + validated_20m_bands + validated_60m_bands
+            else:
+                sr_final = np.concatenate((sr20, sr60), axis=2)
+                validated_sr_final_bands = validated_20m_bands + validated_60m_bands
 
             p_r = self.update(d_1, data10.shape, sr_final, xmin, ymin)
             filename = os.path.join(self.output_dir, path_to_output_img)
@@ -384,4 +410,5 @@ class Superresolution:
         """
         ensure_data_directories_exist()
         params = load_params()  # type: dict
-        Superresolution(params).run_model()
+        Superresolution(params).conditional_run()
+        #Superresolution(params).run_model()
