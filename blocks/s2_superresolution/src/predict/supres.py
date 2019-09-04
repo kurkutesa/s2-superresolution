@@ -6,7 +6,6 @@ import os
 import gc
 
 import numpy as np
-from keras.backend.tensorflow_backend import set_session
 import keras.backend as K
 import tensorflow as tf
 
@@ -88,8 +87,12 @@ def _predict(test, input_shape, deep=False, run_60=False):
     # Only allow a total of half the GPU memory to be allocated
     config.gpu_options.per_process_gpu_memory_fraction = 0.5  # pylint: disable=no-member
 
+    # Terminate on long hangs
+    #config.operation_timeout_in_ms = 15000
+
     # Create a session with the above options specified.
-    set_session(tf.Session(config=config))
+    session = tf.Session(config=config)
+    K.set_session(session)
     ###################################
     if deep:
         model = s2model(input_shape, num_layers=32, feature_size=256)
@@ -103,6 +106,9 @@ def _predict(test, input_shape, deep=False, run_60=False):
     model.load_weights(predict_file)
     LOGGER.info("Predicting using file: %s", predict_file)
     prediction = model.predict(test, verbose=1)
+    del model
     LOGGER.info("This is for releasing memory: %s", gc.collect())
+    # finally, close sessions
+    session.close()
     K.clear_session()
     return prediction
