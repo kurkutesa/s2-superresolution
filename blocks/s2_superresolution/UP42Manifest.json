@@ -8,7 +8,7 @@
         "deep learning",
         "convolutional neural network"
     ],
-    "display_name": "Super resolution",
+    "display_name": "Sentinel-2 Super-resolution",
     "description": "This block takes an Sentinel-2 image and runs superresolution algorithm on it.\nThis algorithm creates a 10m resolution for all the existing spectral bands within 20m and 60m resolutions by using a trained convolutional neural network",
     "parameters": {
         "roi_x_y": {"type": "array", "default": [5000, 5000, 5500, 5500]},
