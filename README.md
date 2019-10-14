@@ -65,7 +65,7 @@ make install
 ## Testing the block locally
 
 Before uploading the block to the UP42 platform, we encourage you to run the following local tests and validations to
-ensure that the block works as expected, conforms to the UP42 specifications and can could successfully applied in an
+ensure that the block works as expected, conforms to the UP42 specifications and could be successfully applied in a
 UP42 workflow.
 
 ### Run the unit tests
@@ -111,7 +111,7 @@ make e2e
 
 ## Pushing the block to the UP42 platform
 
-First login to he UP42 docker registry. `me@example.com` needs to be replaced by your **UP42 username**,
+First login to the UP42 docker registry. `me@example.com` needs to be replaced by your **UP42 username**,
 which is the email address you use on the UP42 website.
 
 ```bash
