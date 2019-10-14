@@ -21,7 +21,7 @@ if __name__ == "__main__":
     os.system("gsutil -m cp -r gs://blocks-e2e-testing/e2e_s2_superresolution/* %s" % INPUT_DIR)
 
     RUN_CMD = """docker run -v %s:/tmp \
-                 -e 'UP42_TASK_PARAMETERS={"roi_x_y": [500, 500, 500, 500],\
+                 -e 'UP42_TASK_PARAMETERS={"roi_x_y": [5000, 5000, 5500, 5500], \
                  "copy_original_bands": false}' \
                  -it superresolution""" % TEST_DIR
 
