@@ -1,7 +1,7 @@
 ## Configuration for Makefile.
 SRC := blocks/s2_superresolution
-UP42_DOCKERFILE := $(SRC)/Dockerfile
-UP42_MANIFEST := $(SRC)/UP42Manifest.json
+UP42_DOCKERFILE := Dockerfile
+UP42_MANIFEST := UP42Manifest.json
 DOCKER_TAG := superresolution
 DOCKER_VERSION := latest
 
@@ -9,13 +9,7 @@ VALIDATE_ENDPOINT := https://api.up42.com/validate-schema/block
 REGISTRY := registry.up42.com
 
 install:
-	set -e
-	if [[ $* == *--user* ]]
-	then
-	    python -m pip install --user -r $(SRC)/requirements.txt
-	else
-	    python -m pip install -r $(SRC)/requirements.txt
-	fi
+	pip3 install -r $(SRC)/requirements.txt
 
 test:
 	python -m pytest --pylint --pylint-rcfile=../../pylintrc --mypy --mypy-ignore-missing-imports --cov=$(SRC)/src/
@@ -31,9 +25,9 @@ validate:
 
 build:
 ifdef UID
-	docker build --build-arg manifest="$(cat $(UP42_MANIFEST))" -f $(UP42_DOCKERFILE) -t $(REGISTRY)/$(UID)/$(DOCKER_TAG):$(DOCKER_VERSION) .
+	cd $(SRC); docker build --build-arg manifest="$(cat $(UP42_MANIFEST))" -f $(UP42_DOCKERFILE) -t $(REGISTRY)/$(UID)/$(DOCKER_TAG):$(DOCKER_VERSION) .
 else
-	docker build --build-arg manifest="$(cat $(UP42_MANIFEST))" -f $(UP42_DOCKERFILE) -t $(DOCKER_TAG) .
+	cd $(SRC); docker build --build-arg manifest="$(cat $(UP42_MANIFEST))" -f $(UP42_DOCKERFILE) -t $(DOCKER_TAG) .
 endif
 
 push:
