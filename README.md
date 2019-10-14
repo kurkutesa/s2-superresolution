@@ -10,7 +10,7 @@ Another goal of this project is to help users setting up their [TensorFlow](http
 [UP42](https://up42.com). The block functionality and performed
 processing steps are described in more detail in the [UP42 documentation: S2 Super-Resolution](https://docs.up42.com/up42-blocks/processing/s2-superresolution.html).
 
-**Block Input**: [SENTINEL2_L1C](https://docs.up42.com/up42-blocks/sobloo-s2-l1c.html)
+**Block Input**: [SENTINEL2_L1C](https://docs.up42.com/up42-blocks/sobloo-s2-l1c.html) product.
 
 **Block Output**: [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF) file.
 
@@ -98,7 +98,7 @@ would be uploaded to UP42). The end-to-end test makes sure the block's output ac
 
 First build the docker image locally.
 
-```
+```bash
 make build
 ```
 
