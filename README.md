@@ -1,185 +1,171 @@
-# s2-superresolution on UP42
+# Sentinel 2 Super-Resolution processing block
 ## Introduction
 
-This is a state of the art processing block using a [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network) 
+This is a state of the art processing block using a [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network)
 algorithm to derive higher resolution images from existing lower resolution images using Sentinel-2 datasets as input.
-The code is adapted from https://github.com/lanha/DSen2, our thanks go to the authors of the original code base and the 
+The code is adapted from https://github.com/lanha/DSen2, our thanks go to the authors of the original code base and the
 corresponding paper. Please note that **currently this block can only process ONE image at a time.**
 
 Another goal of this project is to help users setting up their [TensorFlow](https://tensorflow.org) based algorithms on
-[UP42](https://up42.com).
+[UP42](https://up42.com). The block functionality and performed
+processing steps are described in more detail in the [UP42 documentation: S2 Super-Resolution](https://docs.up42.com/up42-blocks/processing/s2-superresolution.html).
 
-## Block description
+**Block Input**: [Sentinel 2 L1C](https://docs.up42.com/up42-blocks/sobloo-s2-l1c.html) product.
 
-This is the
-[block](https://docs.up42.com/getting-started/core-concepts.html#blocks)
-description in terms of the UP42 core concepts.
-
-* Block type: processing
-* Supported input types:
-  * [SENTINEL2_L1C](https://docs.up42.com/up42-blocks/sobloo-s2-l1c.html)   
-* Output type: AOIClipped (geo-referenced [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF))
-* Provider: [UP42](https://up42.com)
-* Tags: machine learning, deep learning, data processing, analytics
+**Block Output**: [GeoTIFF](https://en.wikipedia.org/wiki/GeoTIFF) file.
 
 ## Requirements
 
- 1. [git](https://git-scm.com/).
- 2. [docker engine](https://docs.docker.com/engine/).
- 3. [UP42](https://up42.com) account credentials.
- 4. [Python](https://python.org) 3.5 or later.
- 5. Required Python packages as specified in
-    `blocks/s2-superresolution/requirements.txt`.
+This example requires the **Mac or Ubuntu bash**, an example using **Windows** will be provided shortly.
+In order to bring this example block or your own custom block to the UP42 platform the following tools are required:
 
-## Usage
 
-### Local development HOWTO
+ - [UP42](https://up42.com) account -  Sign up for free!
+ - [Python 3.7](https://python.org/downloads)
+ - A virtual environment manager e.g. [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/)
+ - [git](https://git-scm.com/)
+ - [docker engine](https://docs.docker.com/engine/)
+ - [GNU make](https://www.gnu.org/software/make/)
 
-Clone the repository in a given `<directory>`:
 
-```bash
-git clone https://github.com/up42/s2-superresolution.git <directory>
-``` 
+## Instructions
 
-then do `cd <directory>`.
-#### Install the required libraries
-First create a virtual environment either by using [virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/) 
-or [virtualenv](https://virtualenv.pypa.io/en/latest/).
-In the case of using virtualenvwrapper do:
+The following step-by-step instructions will guide you through setting up, dockerizing and pushing the example custom
+block to UP42.
 
-```mkvirtualenv --python=$(which python3.7) up42-supres```
-
-In the case of using virtualenv do:
-
-````
-virtualenv -p $(which python3.7) up42-supres
-````
-
-After creating a virtual environment and activating it, all the necessary libraries can be installed on this environment by doing:
+### Clone the repository
 
 ```bash
-cd s2-superresolution/blocks/s2_superresolution/
-./setup.sh
+git clone https://github.com/up42/s2-superresolution.git
 ```
-#### Create the super resolution image using the trained network
 
-The trained network can be used directly on downloaded Sentinel-2 tiles. For more details, see in the s2_tiles_supres.py file.
+Then navigate to the folder via `cd s2-superresolution`.
 
-The code use the .xml file of the unzipped S2 tile. The output image will be saved with a `.tif` extension which is
-easily readable by GIS packages such as QGIS (https://www.qgis.org/).
-You need to create a `/tmp/output/` folder so that the output image can be written into this directory.
-If you want to also copy the original high resolution (10m bands) you can do so, with tuning the parameter
-`copy_original_bands` in the Up42Manifest.json and choose default to be `yes`.
-The source code also predict the lowest resolution bands (60m) by default, so that the output image will include high
-resolution (10m) for all the exiting bands within 20m and 60m resolutions.
+### Installing the required libraries
 
-
-### Run the tests
-
-This project uses [pytest](https://docs.pytest.org/en/latest/) for testing. It is necessary to provde a Sentinel-2
-dataset in SAFE format.  
-Please note that the input image should be the outcome of the `Sentinel-2 L1C MSI Full Scenes` data block which contains a
-``data.json``. This ``data.json`` file is needed for running the test file correctly.
-To run the tests, first create a `/tmp/input/` directory and place the result of the mentioned data block ( which
-includes a `.SAFE` file) in this directory. 
-The output image will be written to the `/tmp/output/` directory. Finally, to run the test do as following:
+First create a new virtual environment called `up42-supres`, for example by using
+[virtualenvwrapper](https://virtualenvwrapper.readthedocs.io/en/latest/):
 
 ```bash
-./test.sh
+mkvirtualenv --python=$(which python3.7) up42-supres
 ```
 
-### Build and run the docker image locally
-
-To build the Docker image for local using you can run the following shell command from the repository
-that contains the Dockerfile: 
+Activate the new environment:
 
 ```bash
-cd s2-superresolution/blocks/s2-superresolution/
-# Build the image.
-docker build -t superresolution -f Dockerfile . 
-
+workon up42-supres
 ```
-In the next step you can use the params.json file to define whether you want to work with the whole image or 
-a subset of the image by modifying the ``roi_x_y`` or ``roi_lon_lat`` (which is a `list` of coordinates).
-You can also choose whether you want to keep the original spectral bands of 10m resolution of the input image or not. 
-Please note that you can add or remove ``roi_x_y`` or ``roi_lon_lat`` based on your preferences.
 
-An example of params.json file is shown below:
-
-``
-{
-  "roi_x_y": [5000,5000,5500,5500],
-  "copy_original_bands": false
-}
-``
-
-#### Run the processing block 
-
- * Make sure you have created the block input `/tmp/input` and output directories `/tmp/output`.
- * Copy the input data form the unzipped s2 file (along with the
-   [GeoJSON](https://en.wikipedia.org/wiki/GeoJSON) file called
-   `data.json`) to `/tmp/input`.
- * Build the docker image as outlined above.
- * Run the following command: 
- 
-```
- docker run -e UP42_TASK_PARAMETERS="$(cat params.json)" --mount type=bind,src=/tmp/output,dst=/tmp/output --mount type=bind,src=/tmp/input,dst=/tmp/input superresolution:latest
-```
-This [bind mounts](https://docs.docker.com/storage/bind-mounts/) the
-host and container `/tmp/input` and `/tmp/output` directories into the
-**input** and **output** directories respectively. If you wish you can
-set it to some other directory that is convenient to you.
-
-### Publish the block to UP42
-
-#### Authenticate into the UP42 registry 
-
-Login into the UP42 [Docker image registry](https://docs.docker.com/registry/) 
-with your UP42 user ID (`<user_id>`) and password:
+Install the necessary Python libraries via:
 
 ```bash
-docker login -u <user_id> registry.up42.com
-``` 
-
-To build the Docker image for publishing on the UP42
-platform you can run the following shell commands from the repository
-that contains the Dockerfile:
-
-```bash
-cd s2-superresolution/blocks/s2-superresolution/
-# Build the image.
-docker build . \
-     -t registry.up42.com/some-example-user-id/superresolution:latest \
-     --build-arg manifest="$(<UP42Manifest.json)"
+make install
 ```
 
-#### Push the block to the registry
+## Testing the block locally
 
-Push your block as a Docker image to the UP42 registry like this: 
+Before uploading the block to the UP42 platform, we encourage you to run the following local tests and validations to
+ensure that the block works as expected, conforms to the UP42 specifications and could be successfully applied in a
+UP42 workflow.
+
+### Run the unit tests
+
+By successfully running the implemented Python unit tests you can ensure that the block processing functionality works
+as expected. This project uses [pytest](https://docs.pytest.org/en/latest/) for testing, which was installed in
+the previous step. Run the unit tests via:
 
 ```bash
-docker push registry.up42.com/<user_id>/superresolution:latest
+make test
 ```
 
-Learn more about creating and publishing blocks by reading our
-[documentation](https://docs.up42.com/getting-started/first-block.html#).
+### Validate the manifest
 
-### Further resources
+Then test if the block manifest is valid. The
+[UP42manifest.json](https://github.com/up42/s2-superresolution/blob/master/blocks/superresolution/UP42Manifest.json)
+file contains the block capabilities. They define what kind of data a block accepts and provides, which parameters
+can be used with the block etc. See the
+[UP42 block capabilities documentation](https://docs.up42.com/reference/capabilities.html?highlight=capabilities).
+Validate the manifest via:
 
- * [Getting started with UP42](https://docs.up42.com/getting-started/index.html)
- * [Creating a block](https://docs.up42.com/getting-started/first-block.html)
- * [Setting up the development environment](https://docs.up42.com/getting-started/dev-setup.html)
- * [Block specifications](https://docs.up42.com/specifications/index.html)
- * [Block examples](https://docs.up42.com/examples/index.html)
- * [Tensorflow](https://www.tensorflow.org/)
+```bash
+make validate
+```
 
-### Support
-  
- 1. Open an issue here.
- 2. Reach out to us on
-      [gitter](https://gitter.im/up42-com/community).
- 3. Mail us [support@up42.com](mailto:support@up42.com).
+### Run the end-to-end test
 
- 
+In order to run the final end-to-end (`e2e`) test the block code needs to be dockerized (put in a container that later on
+would be uploaded to UP42). The end-to-end test makes sure the block's output actually conforms to the platform's requirements.
+
+First build the docker image locally.
+
+```bash
+make build
+```
+
+Run the `e2e` tests with:
+
+```bash
+make e2e
+```
 
 
+## Pushing the block to the UP42 platform
+
+First login to the UP42 docker registry. `me@example.com` needs to be replaced by your **UP42 username**,
+which is the email address you use on the UP42 website.
+
+```bash
+make login USER=me@example.com
+```
+
+In order to push the block to the UP42 platform, you need to build the block Docker container with your
+**UP42 USER-ID**. To get your USER-ID, go to the [UP42 custom-blocks menu](https://console.up42.com/custom-blocks).
+Click on "`PUSH a BLOCK to THE PLATFORM`" and copy your USERID from the command shown on the last line at
+"`Push the image to the UP42 Docker registry`". The USERID will look similar to this:
+`63uayd50-z2h1-3461-38zq-1739481rjwia`
+
+Pass the USER-ID to the build command:
+```bash
+make build UID=<UID>
+
+# As an example: make build UID=63uayd50-z2h1-3461-38zq-1739481rjwia
+```
+
+Now you can finally push the image to the UP42 docker registry, again passing in your USER-ID:
+
+```bash
+make push UID=<UID>
+
+# As an example: make push UID=63uayd50-z2h1-3461-38zq-1739481rjwia
+```
+
+**Success!** The block will now appear in the [UP42 custom blocks menu](https://console.up42.com/custom-blocks/) menu
+and can be selected under the *Custom blocks* tab when building a workflow.
+
+<p align="center">
+  <img width="500" src="https://i.ibb.co/YpmwxY2/custom-block-successfully-uploaded.png">
+</p>
+
+### Optional: Updating an existing custom block
+
+If you want to update a custom block on UP42, you need to build the Docker container with an updated version:
+The default docker tag is `superresolution` and the version is set to `latest`.
+
+```bash
+make build UID=<UID> DOCKER_TAG=<docker tag> DOCKER_VERSION=<docker version>
+
+# As an example: docker build UID=63uayd50-z2h1-3461-38zq-1739481rjwia DOCKER_TAG=superresolution DOCKER_VERSION=1.0
+```
+
+Then push the block container with the updated tag and version:
+
+```bash
+make push UID=<UID> DOCKER_TAG=<docker tag> DOCKER_VERSION=<docker version>
+
+# As an example: make push UID=63uayd50-z2h1-3461-38zq-1739481rjwia DOCKER_TAG=superresolution DOCKER_VERSION=1.0
+```
+
+## Support
+
+Open a **github issue** in this repository or send us an **email** at [support@up42.com](mailto:support@up42.com),
+we are happy to answer your questions!

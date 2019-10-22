@@ -1,4 +1,4 @@
-tensorflow-gpu
+tensorflow==1.13.1
 keras
 pytest
 pytest-pylint
