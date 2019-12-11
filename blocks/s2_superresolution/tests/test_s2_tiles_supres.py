@@ -1,17 +1,12 @@
 """
 This module include multiple test cases to check the performance of the s2_tiles_supres script.
 """
-import glob
-import os
-import json
 from pathlib import Path
 import tempfile
 
 import rasterio
-import pytest
-import mock
 
-from context import Superresolution, load_params, SyntheticImage
+from context import Superresolution, SyntheticImage
 
 
 def test_get_max_min():
@@ -175,4 +170,3 @@ def test_data_final():
 
     d_final = Superresolution.data_final(dsr, valid_indices, 0, 0, 5, 5, 1)
     assert d_final.shape == (6, 6, 4)
-

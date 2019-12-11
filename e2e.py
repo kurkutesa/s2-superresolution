@@ -21,7 +21,7 @@ if __name__ == "__main__":
     if not os.path.isdir(INPUT_DIR):
         INPUT_DIR.mkdir(parents=True, exist_ok=True)
         os.system("gsutil -m cp -r gs://floss-blocks-e2e-testing/e2e_s2_superresolution/* %s"
-              % INPUT_DIR)
+                  % INPUT_DIR)
 
     RUN_CMD = """docker run -v %s:/tmp \
                  -e 'UP42_TASK_PARAMETERS={"roi_x_y": [5000, 5000, 5500, 5500], \
@@ -47,15 +47,15 @@ if __name__ == "__main__":
     assert OUTPUT.exists()
 
     # Check whether the outcome image has the correct 10m resolution for all the spectral bands.
-    output_image = rasterio.open(OUTPUT)
-    assert output_image.transform[0] == 10
-    assert output_image.transform[4] == -10
+    OUTPUT_IMAGE = rasterio.open(OUTPUT)
+    assert OUTPUT_IMAGE.transform[0] == 10
+    assert OUTPUT_IMAGE.transform[4] == -10
 
-    desc_exm = ('SR B5 (705 nm)', 'SR B6 (740 nm)',
+    DESC_EXM = ('SR B5 (705 nm)', 'SR B6 (740 nm)',
                 'SR B7 (783 nm)', 'SR B8A (865 nm)', 'SR B11 (1610 nm)',
                 'SR B12 (2190 nm)', 'SR B1 (443 nm)', 'SR B9 (945 nm)')
-    assert output_image.descriptions == desc_exm
+    assert OUTPUT_IMAGE.descriptions == DESC_EXM
 
     # Check whether the outcome image has the correct georeference.
-    crs_exm = {'init': 'epsg:32633'}
-    assert output_image.crs.to_dict() == crs_exm
+    CRS_EXM = {'init': 'epsg:32633'}
+    assert OUTPUT_IMAGE.crs.to_dict() == CRS_EXM
