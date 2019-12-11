@@ -5,8 +5,8 @@ pytest-pylint
 pytest-cov
 pytest-mypy
 numpy
-argparse
 rasterio
+rio_cogeo
 scikit-image
 imageio
 pyproj
