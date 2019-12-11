@@ -18,7 +18,8 @@ if __name__ == "__main__":
         file_path.unlink()
 
     # Download file from gsutil
-    os.system("gsutil -m cp -r gs://floss-blocks-e2e-testing/e2e_s2_superresolution/* %s" % INPUT_DIR)
+    os.system("gsutil -m cp -r gs://floss-blocks-e2e-testing/e2e_s2_superresolution/* %s"
+              % INPUT_DIR)
 
     RUN_CMD = """docker run -v %s:/tmp \
                  -e 'UP42_TASK_PARAMETERS={"roi_x_y": [5000, 5000, 5500, 5500], \
