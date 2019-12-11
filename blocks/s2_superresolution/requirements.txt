@@ -6,7 +6,7 @@ pytest-cov
 pytest-mypy
 numpy
 rasterio
-rio_cogeo
+rio-cogeo
 scikit-image
 imageio
 pyproj
