@@ -245,7 +245,7 @@ class Superresolution:
          'B3': 'B3 (560 nm)', 'B2': 'B2 (490 nm)', 'B8': 'B8 (842 nm)'})
         """
         input_select_bands = 'B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12'  # type: str
-        select_bands = [x for x in re.split(',', input_select_bands)]  # type: List[str]
+        select_bands = re.split(',', input_select_bands)  # type: List[str]
         validated_bands = []  # type: list
         validated_indices = []  # type: list
         validated_descriptions = defaultdict(str)  # type: defaultdict

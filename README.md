@@ -16,7 +16,7 @@ processing steps are described in more detail in the [UP42 documentation: S2 Sup
 
 ## Requirements
 
-This example requires the **Mac or Ubuntu bash**, an example using **Windows** will be provided shortly.
+This example requires the **Mac or Ubuntu bash**.
 In order to bring this example block or your own custom block to the UP42 platform the following tools are required:
 
 
@@ -164,8 +164,3 @@ make push UID=<UID> DOCKER_TAG=<docker tag> DOCKER_VERSION=<docker version>
 
 # As an example: make push UID=63uayd50-z2h1-3461-38zq-1739481rjwia DOCKER_TAG=superresolution DOCKER_VERSION=1.0
 ```
-
-## Support
-
-Open a **github issue** in this repository or send us an **email** at [support@up42.com](mailto:support@up42.com),
-we are happy to answer your questions!

@@ -7,10 +7,12 @@ import glob
 from typing import Tuple
 import json
 from math import ceil
-import numpy as np
 
+import numpy as np
+from scipy.ndimage.filters import gaussian_filter
 from skimage.transform import resize
 import skimage.measure
+
 from predict.helper import get_logger
 
 LOGGER = get_logger(__name__)
@@ -416,7 +418,6 @@ def downpixelaggr(img, scale=2):
     """
     This method use a Gaussian filter for blurring the original image.
     """
-    from scipy.ndimage.filters import gaussian_filter
 
     if len(img.shape) == 2:
         img = np.expand_dims(img, axis=-1)

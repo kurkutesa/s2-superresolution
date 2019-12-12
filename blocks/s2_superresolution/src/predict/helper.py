@@ -79,6 +79,7 @@ def save_result(model_output, output_bands, valid_desc,
     :param image_name: The name of the output image.
 
     """
+
     with rasterio.open(image_name, "w", **output_profile) as d_s:
         for b_i, b_n in enumerate(output_bands):
             d_s.write(model_output[:, :, b_i], indexes=b_i + 1)
