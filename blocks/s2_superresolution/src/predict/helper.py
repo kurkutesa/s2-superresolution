@@ -8,7 +8,6 @@ import json
 from pathlib import Path
 from geojson import Feature, FeatureCollection
 import rasterio
-from rio_cogeo.profiles import cog_profiles
 
 LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 SENTINEL2_L1C = "up42.data.scene.sentinel2_l1c"
@@ -80,12 +79,8 @@ def save_result(model_output, output_bands, valid_desc,
     :param image_name: The name of the output image.
 
     """
-    # Use cloud-optimized geotiff for output
-    cogeo_options = cog_profiles.get("deflate")
-    out_profile = output_profile.copy()
-    out_profile.update(cogeo_options)
 
-    with rasterio.open(image_name, "w", **out_profile) as d_s:
+    with rasterio.open(image_name, "w", **output_profile) as d_s:
         for b_i, b_n in enumerate(output_bands):
             d_s.write(model_output[:, :, b_i], indexes=b_i + 1)
             d_s.set_band_description(b_i+1, "SR " + valid_desc[b_n])
