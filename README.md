@@ -164,3 +164,8 @@ make push UID=<UID> DOCKER_TAG=<docker tag> DOCKER_VERSION=<docker version>
 
 # As an example: make push UID=63uayd50-z2h1-3461-38zq-1739481rjwia DOCKER_TAG=superresolution DOCKER_VERSION=1.0
 ```
+
+## Questions and recommendations
+
+Open a **github issue** in this repository; we are happy to answer your questions!
+
