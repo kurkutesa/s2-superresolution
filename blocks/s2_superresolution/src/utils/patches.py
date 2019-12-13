@@ -76,9 +76,7 @@ def get_test_patches(dset_10, dset_20, patchsize=128, border=4, interp=True) -> 
     nr_patches = (patches_alongi + 1) * (patches_alongj + 1)
 
     # pylint: disable=unused-variable
-    label_20 = np.zeros((nr_patches, bands20) + patch_size_hr).astype(
-        np.float32
-    )
+    label_20 = np.zeros((nr_patches, bands20) + patch_size_hr).astype(np.float32)
     image_20 = np.zeros((nr_patches, bands20) + tuple(patch_size_lr)).astype(np.float32)
     image_10 = np.zeros((nr_patches, bands10) + patch_size_hr).astype(np.float32)
 
