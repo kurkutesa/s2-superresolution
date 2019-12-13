@@ -4,7 +4,7 @@
 This is a state of the art processing block using a [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network)
 algorithm to derive higher resolution images from existing lower resolution images using Sentinel-2 datasets as input.
 The code is adapted from https://github.com/lanha/DSen2, our thanks go to the authors of the original code base and the
-corresponding paper. Please note that **currently this block can only process ONE image at a time.**
+corresponding paper. Please note that **currently this block can only process ONE complete image at a time due to GPU memory constraints.**
 
 Another goal of this project is to help users setting up their [TensorFlow](https://tensorflow.org) based algorithms on
 [UP42](https://up42.com). The block functionality and performed
