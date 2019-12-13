@@ -9,7 +9,7 @@ import keras.backend as K
 # https://github.com/lanha/DSen2 and is distributed under the same
 # license.
 
-K.set_image_data_format('channels_first')
+K.set_image_data_format("channels_first")
 
 
 def resblock(x_input, channels, kernel_size=None, scale=0.1):
@@ -24,9 +24,13 @@ def resblock(x_input, channels, kernel_size=None, scale=0.1):
     """
     if kernel_size is None:
         kernel_size = [3, 3]
-    tmp = Conv2D(channels, kernel_size, kernel_initializer='he_uniform', padding='same')(x_input)
-    tmp = Activation('relu')(tmp)
-    tmp = Conv2D(channels, kernel_size, kernel_initializer='he_uniform', padding='same')(tmp)
+    tmp = Conv2D(
+        channels, kernel_size, kernel_initializer="he_uniform", padding="same"
+    )(x_input)
+    tmp = Activation("relu")(tmp)
+    tmp = Conv2D(
+        channels, kernel_size, kernel_initializer="he_uniform", padding="same"
+    )(tmp)
     tmp = Lambda(lambda x: x * scale)(tmp)
 
     return Add()([x_input, tmp])
@@ -53,14 +57,21 @@ def s2model(input_shape, num_layers=32, feature_size=256):
         x_m = Concatenate(axis=1)([input10, input20])
 
     # Treat the concatenation
-    x_m = Conv2D(feature_size, (3, 3), kernel_initializer='he_uniform',
-                 activation='relu', padding='same')(x_m)
+    x_m = Conv2D(
+        feature_size,
+        (3, 3),
+        kernel_initializer="he_uniform",
+        activation="relu",
+        padding="same",
+    )(x_m)
 
-    for i in range(num_layers): # pylint: disable=unused-variable
+    for i in range(num_layers):  # pylint: disable=unused-variable
         x_m = resblock(x_m, feature_size)
 
     # One more convolution, and then we add the output of our first conv layer
-    x_m = Conv2D(input_shape[-1][0], (3, 3), kernel_initializer='he_uniform', padding='same')(x_m)
+    x_m = Conv2D(
+        input_shape[-1][0], (3, 3), kernel_initializer="he_uniform", padding="same"
+    )(x_m)
     # x_m = Dropout(0.3)(x_m)
     if len(input_shape) == 3:
         x_m = Add()([x_m, input60])
