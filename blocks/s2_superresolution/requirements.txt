@@ -11,3 +11,4 @@ imageio
 pyproj
 geojson
 mock
+black

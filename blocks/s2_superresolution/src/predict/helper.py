@@ -9,7 +9,7 @@ from pathlib import Path
 from geojson import Feature, FeatureCollection
 import rasterio
 
-LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 SENTINEL2_L1C = "up42.data.scene.sentinel2_l1c"
 
 
@@ -32,8 +32,8 @@ def ensure_data_directories_exist():
     """
     This method checks input and output directories for data flow
     """
-    Path('/tmp/input/').mkdir(parents=True, exist_ok=True)
-    Path('/tmp/output/').mkdir(parents=True, exist_ok=True)
+    Path("/tmp/input/").mkdir(parents=True, exist_ok=True)
+    Path("/tmp/output/").mkdir(parents=True, exist_ok=True)
 
 
 def load_metadata() -> FeatureCollection:
@@ -56,7 +56,7 @@ def load_params() -> dict:
     Get the parameters for the current task directly from the task parameters.
     """
     helper_logger = get_logger(__name__)
-    data = os.environ.get("UP42_TASK_PARAMETERS", '{}')  # type: str
+    data = os.environ.get("UP42_TASK_PARAMETERS", "{}")  # type: str
     helper_logger.debug("Fetching parameters for this block: %s", data)
     if data == "":
         data = "{}"
@@ -64,8 +64,15 @@ def load_params() -> dict:
 
 
 # pylint: disable-msg=too-many-arguments
-def save_result(model_output, output_bands, valid_desc,
-                output_profile, output_features, output_dir, image_name):
+def save_result(
+    model_output,
+    output_bands,
+    valid_desc,
+    output_profile,
+    output_features,
+    output_dir,
+    image_name,
+):
     """
     This method saves the feature collection meta data and the
     image with high resolution for desired bands to the provided location.
@@ -83,7 +90,7 @@ def save_result(model_output, output_bands, valid_desc,
     with rasterio.open(image_name, "w", **output_profile) as d_s:
         for b_i, b_n in enumerate(output_bands):
             d_s.write(model_output[:, :, b_i], indexes=b_i + 1)
-            d_s.set_band_description(b_i+1, "SR " + valid_desc[b_n])
+            d_s.set_band_description(b_i + 1, "SR " + valid_desc[b_n])
 
     with open(output_dir + "data.json", "w") as f_p:
         f_p.write(json.dumps(output_features, indent=2))

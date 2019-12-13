@@ -9,21 +9,22 @@ import numpy as np
 import keras.backend as K
 import tensorflow as tf
 
-#pylint: disable=wrong-import-position
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+# pylint: disable=wrong-import-position
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
 from utils.dsen2net import s2model
 from utils.patches import get_test_patches, get_test_patches60, recompose_images
 from helper import get_logger
 
 
 SCALE = 2000
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../')))
-MDL_PATH = 'weights/'
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
+MDL_PATH = "weights/"
 LOGGER = get_logger(__name__)
 
 # This code is adapted from this repository
 # https://github.com/lanha/DSen2 and is distributed under the same
 # license.
+
 
 def dsen2_20(d10, d20, deep=False) -> np.ndarray:
     """
@@ -85,10 +86,12 @@ def _predict(test, input_shape, deep=False, run_60=False):
     config.gpu_options.allow_growth = True  # pylint: disable=no-member
 
     # Only allow a total of half the GPU memory to be allocated
-    config.gpu_options.per_process_gpu_memory_fraction = 0.5  # pylint: disable=no-member
+    config.gpu_options.per_process_gpu_memory_fraction = (
+        0.5  # pylint: disable=no-member
+    )
 
     # Terminate on long hangs
-    #config.operation_timeout_in_ms = 15000
+    # config.operation_timeout_in_ms = 15000
 
     # Create a session with the above options specified.
     session = tf.Session(config=config)
@@ -96,12 +99,18 @@ def _predict(test, input_shape, deep=False, run_60=False):
     ###################################
     if deep:
         model = s2model(input_shape, num_layers=32, feature_size=256)
-        predict_file = MDL_PATH+'s2_034_lr_1e-04.hdf5' if\
-            run_60 else MDL_PATH+'s2_033_lr_1e-04.hdf5'
+        predict_file = (
+            MDL_PATH + "s2_034_lr_1e-04.hdf5"
+            if run_60
+            else MDL_PATH + "s2_033_lr_1e-04.hdf5"
+        )
     else:
         model = s2model(input_shape, num_layers=6, feature_size=128)
-        predict_file = MDL_PATH+'s2_030_lr_1e-05.hdf5' if\
-            run_60 else MDL_PATH+'s2_032_lr_1e-04.hdf5'
+        predict_file = (
+            MDL_PATH + "s2_030_lr_1e-05.hdf5"
+            if run_60
+            else MDL_PATH + "s2_032_lr_1e-04.hdf5"
+        )
     LOGGER.info("Symbolic Model Created.")
     model.load_weights(predict_file)
     LOGGER.info("Predicting using file: %s", predict_file)
