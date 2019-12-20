@@ -29,7 +29,7 @@ if __name__ == "__main__":
         """docker run -v %s:/tmp \
                  -e 'UP42_TASK_PARAMETERS={"roi_x_y": [5000, 5000, 5500, 5500], \
                  "copy_original_bands": false}' \
-                 -it superresolution"""
+                 -it s2-superresolution"""
         % TEST_DIR
     )
 
