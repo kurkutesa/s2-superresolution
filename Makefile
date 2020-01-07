@@ -2,7 +2,7 @@
 SRC := blocks/s2_superresolution
 UP42_DOCKERFILE := Dockerfile
 UP42_MANIFEST := $(SRC)/UP42Manifest.json
-DOCKER_TAG := superresolution
+DOCKER_TAG := s2-superresolution
 DOCKER_VERSION := latest
 
 VALIDATE_ENDPOINT := https://api.up42.com/validate-schema/block
@@ -12,6 +12,7 @@ install:
 	pip install -r $(SRC)/requirements.txt
 
 test:
+	black .
 	python -m pytest --pylint --pylint-rcfile=../../pylintrc --mypy --mypy-ignore-missing-imports --cov=$(SRC)/src/
 
 clean:

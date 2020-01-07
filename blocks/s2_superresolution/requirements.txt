@@ -5,9 +5,10 @@ pytest-pylint
 pytest-cov
 pytest-mypy
 numpy
-argparse
 rasterio
 scikit-image
 imageio
 pyproj
 geojson
+mock
+black

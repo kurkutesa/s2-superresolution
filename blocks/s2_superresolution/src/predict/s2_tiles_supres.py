@@ -18,8 +18,14 @@ from rasterio.windows import Window
 from rasterio import Affine as A
 import pyproj as proj
 from supres import dsen2_20, dsen2_60
-from helper import (get_logger, load_metadata, load_params, save_result, SENTINEL2_L1C,
-                    ensure_data_directories_exist)
+from helper import (
+    get_logger,
+    load_metadata,
+    load_params,
+    save_result,
+    SENTINEL2_L1C,
+    ensure_data_directories_exist,
+)
 
 LOGGER = get_logger(__name__)
 
@@ -34,11 +40,13 @@ class Superresolution:
     bands for 20m and 60m resolution.
     """
 
-    def __init__(self,
-                 params: dict,
-                 output_dir: str = '/tmp/output/',
-                 input_dir: str = '/tmp/input/',
-                 data_folder: str = '*/MTD*.xml'):
+    def __init__(
+        self,
+        params: dict,
+        output_dir: str = "/tmp/output/",
+        input_dir: str = "/tmp/input/",
+        data_folder: str = "*/MTD*.xml",
+    ):
         """
         :param output_dir: The directory for the output image.
         :param input_dir: The directory of the original image.
@@ -47,17 +55,17 @@ class Superresolution:
 
         self.params = params
         try:
-            params['copy_original_bands']
+            params["copy_original_bands"]
         except KeyError:
-            params['copy_original_bands'] = False
+            params["copy_original_bands"] = False
         try:
-            params['roi_x_y']
+            params["roi_x_y"]
         except KeyError:
-            params['roi_x_y'] = None
+            params["roi_x_y"] = None
         try:
-            params['roi_lon_lat']
+            params["roi_lon_lat"]
         except KeyError:
-            params['roi_lon_lat'] = None
+            params["roi_lon_lat"] = None
 
         self.output_dir = output_dir
         self.input_dir = input_dir
@@ -73,11 +81,9 @@ class Superresolution:
         feature_list = []
         for feature in input_metadata.features:
             path_to_input_img = feature["properties"][SENTINEL2_L1C]
-            path_to_output_img = Path(path_to_input_img).stem + \
-                '_superresolution.tif'
+            path_to_output_img = Path(path_to_input_img).stem + "_superresolution.tif"
             out_feature = feature.copy()
-            out_feature["properties"]["up42.data.aoiclipped"] =\
-                path_to_output_img
+            out_feature["properties"]["up42.data.aoiclipped"] = path_to_output_img
             feature_list.append(out_feature)
         out_fc = FeatureCollection(feature_list)
 
@@ -89,9 +95,11 @@ class Superresolution:
         This method returns the raster data set of original image for
         all the available resolutions.
         """
-        data_path = ''
-        for file in glob.iglob(os.path.join(self.input_dir, str(image_id),
-                                            self.data_folder), recursive=True):
+        data_path = ""
+        for file in glob.iglob(
+            os.path.join(self.input_dir, str(image_id), self.data_folder),
+            recursive=True,
+        ):
             data_path = file
 
         raster_data = rasterio.open(data_path)
@@ -152,7 +160,7 @@ class Superresolution:
         # transform the lat and lon into x and y position which are defined in
         # the world's coordinate system.
         local_crs = self.get_utm(data)
-        crs_wgs = proj.Proj(init='epsg:4326')  # WGS 84 geographic coordinate system
+        crs_wgs = proj.Proj(init="epsg:4326")  # WGS 84 geographic coordinate system
         crs_bng = proj.Proj(init=local_crs)  # use a locally appropriate projected CRS
         x_p, y_p = proj.transform(crs_wgs, crs_bng, lon, lat)
         x_p -= xoff
@@ -160,7 +168,7 @@ class Superresolution:
 
         # matrix inversion
         # get the x and y position in image's coordinate system.
-        det_inv = 1. / (a_t * e_t - d_t * b_t)
+        det_inv = 1.0 / (a_t * e_t - d_t * b_t)
         x_n = (e_t * x_p - b_t * y_p) * det_inv
         y_n = (-d_t * x_p + a_t * y_p) * det_inv
         return int(x_n), int(y_n)
@@ -186,11 +194,13 @@ class Superresolution:
             d_width = d_s.width
             d_height = d_s.height
 
-        if self.params['roi_x_y'] is not None:
-            roi_x1, roi_y1, roi_x2, roi_y2 = self.params.get('roi_x_y')
-            xmi, ymi, xma, yma, area = self.get_max_min(roi_x1, roi_y1, roi_x2, roi_y2, data)
-        elif self.params['roi_lon_lat'] is not None:
-            roi_lon1, roi_lat1, roi_lon2, roi_lat2 = self.params.get('roi_lon_lat')
+        if self.params["roi_x_y"] is not None:
+            roi_x1, roi_y1, roi_x2, roi_y2 = self.params.get("roi_x_y")
+            xmi, ymi, xma, yma, area = self.get_max_min(
+                roi_x1, roi_y1, roi_x2, roi_y2, data
+            )
+        elif self.params["roi_lon_lat"] is not None:
+            roi_lon1, roi_lat1, roi_lon2, roi_lat2 = self.params.get("roi_lon_lat")
             x_1, y_1 = self.to_xy(roi_lon1, roi_lat1, data)
             x_2, y_2 = self.to_xy(roi_lon2, roi_lat2, data)
             xmi, ymi, xma, yma, area = self.get_max_min(x_1, y_1, x_2, y_2, data)
@@ -230,10 +240,10 @@ class Superresolution:
         >>> get_band_short_name(desc)
         'B4'
         """
-        if ',' in description:
-            return description[:description.find(',')]
-        if ' ' in description:
-            return description[:description.find(' ')]
+        if "," in description:
+            return description[: description.find(",")]
+        if " " in description:
+            return description[: description.find(" ")]
         return description[:3]
 
     def validate(self, data) -> Tuple:
@@ -256,8 +266,8 @@ class Superresolution:
         defaultdict(<class 'str'>, {'B4': 'B4 (665 nm)',
          'B3': 'B3 (560 nm)', 'B2': 'B2 (490 nm)', 'B8': 'B8 (842 nm)'})
         """
-        input_select_bands = 'B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12'  # type: str
-        select_bands = [x for x in re.split(',', input_select_bands)]  # type: List[str]
+        input_select_bands = "B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12"  # type: str
+        select_bands = re.split(",", input_select_bands)  # type: List[str]
         validated_bands = []  # type: list
         validated_indices = []  # type: list
         validated_descriptions = defaultdict(str)  # type: defaultdict
@@ -275,8 +285,9 @@ class Superresolution:
 
     @staticmethod
     # pylint: disable-msg=too-many-arguments
-    def data_final(data, term: List, x_mi: int, y_mi: int,
-                   x_ma: int, y_ma: int, n_res) -> np.ndarray:
+    def data_final(
+        data, term: List, x_mi: int, y_mi: int, x_ma: int, y_ma: int, n_res
+    ) -> np.ndarray:
         """
         This method takes the raster file at a specific
         resolution and uses the output of get_max_min
@@ -331,12 +342,11 @@ class Superresolution:
 
         if condition:
             input_fc = input_fc[0:1]
-            output_jsonfile['features'] = output_jsonfile['features'][0:1]
+            output_jsonfile["features"] = output_jsonfile["features"][0:1]
 
         for feature in input_fc:
             path_to_input_img = feature["properties"][SENTINEL2_L1C]
-            path_to_output_img = Path(path_to_input_img).stem + \
-                                 '_superresolution.tif'
+            path_to_output_img = Path(path_to_input_img).stem + "_superresolution.tif"
 
             #d_1, d_2, d_6 = self.get_data(path_to_input_img)
             data_list = self.get_data(path_to_input_img)
@@ -391,10 +401,11 @@ class Superresolution:
                 LOGGER.info("No super-resolution performed, exiting")
                 sys.exit(0)
 
-            if self.params['copy_original_bands']:
+            if self.params["copy_original_bands"]:
                 sr_final = np.concatenate((data10, sr20, sr60), axis=2)
-                validated_sr_final_bands = validated_10m_bands\
-                                           + validated_20m_bands + validated_60m_bands
+                validated_sr_final_bands = (
+                    validated_10m_bands + validated_20m_bands + validated_60m_bands
+                )
             else:
                 sr_final = np.concatenate((sr20, sr60), axis=2)
                 validated_sr_final_bands = validated_20m_bands + validated_60m_bands
@@ -406,19 +417,28 @@ class Superresolution:
             filename = os.path.join(self.output_dir, path_to_output_img)
 
             LOGGER.info("Now writing the super-resolved bands")
-            save_result(sr_final, validated_sr_final_bands, validated_descriptions_all,
-                        p_r, output_jsonfile, self.output_dir, filename)
+            save_result(
+                sr_final,
+                validated_sr_final_bands,
+                validated_descriptions_all,
+                p_r,
+                output_jsonfile,
+                self.output_dir,
+                filename,
+            )
             LOGGER.info("Writing the super-resolved bands is finished.")
 
     # pylint: disable-msg=too-many-arguments
-    def update(self, data, size_10m: Tuple, model_output: np.ndarray, xmi: int, ymi: int):
+    def update(
+        self, data, size_10m: Tuple, model_output: np.ndarray, xmi: int, ymi: int
+    ):
         """
         This method creates the proper georeferencing for the output image.
         :param data: The raster file for 10m resolution.
 
         """
         # Here based on the params.json file, the output image dimension will be calculated.
-        if self.params['copy_original_bands'] == 'true':
+        if self.params["copy_original_bands"] == "true":
             out_dims = size_10m[2] + model_output.shape[2]
         else:
             out_dims = model_output.shape[2]
@@ -427,7 +447,7 @@ class Superresolution:
             p_r = d_s.profile
         new_transform = p_r['transform'] * A.translation(xmi, ymi)
         p_r.update(dtype=rasterio.float32)
-        p_r.update(driver='GTiff')
+        p_r.update(driver="GTiff")
         p_r.update(width=size_10m[1])
         p_r.update(height=size_10m[0])
         p_r.update(count=out_dims)
@@ -442,4 +462,4 @@ class Superresolution:
         ensure_data_directories_exist()
         params = load_params()  # type: dict
         Superresolution(params).conditional_run()
-        #Superresolution(params).run_model()
+        # Superresolution(params).run_model()

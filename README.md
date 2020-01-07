@@ -4,7 +4,7 @@
 This is a state of the art processing block using a [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network)
 algorithm to derive higher resolution images from existing lower resolution images using Sentinel-2 datasets as input.
 The code is adapted from https://github.com/lanha/DSen2, our thanks go to the authors of the original code base and the
-corresponding paper. Please note that **currently this block can only process ONE image at a time.**
+corresponding paper. Please note that **currently this block can only process ONE complete image at a time due to GPU memory constraints.**
 
 Another goal of this project is to help users setting up their [TensorFlow](https://tensorflow.org) based algorithms on
 [UP42](https://up42.com). The block functionality and performed
@@ -16,7 +16,7 @@ processing steps are described in more detail in the [UP42 documentation: S2 Sup
 
 ## Requirements
 
-This example requires the **Mac or Ubuntu bash**, an example using **Windows** will be provided shortly.
+This example requires the **Mac or Ubuntu bash**.
 In order to bring this example block or your own custom block to the UP42 platform the following tools are required:
 
 
@@ -165,7 +165,7 @@ make push UID=<UID> DOCKER_TAG=<docker tag> DOCKER_VERSION=<docker version>
 # As an example: make push UID=63uayd50-z2h1-3461-38zq-1739481rjwia DOCKER_TAG=superresolution DOCKER_VERSION=1.0
 ```
 
-## Support
+## Support, questions and suggestions
 
-Open a **github issue** in this repository or send us an **email** at [support@up42.com](mailto:support@up42.com),
-we are happy to answer your questions!
+Open a **github issue** in this repository; we are happy to answer your questions!
+

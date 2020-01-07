@@ -16,11 +16,16 @@ from predict.helper import get_logger
 LOGGER = get_logger(__name__)
 
 # Define standard land cover classes and their standard stats wrt radiance for a 4-band product
-LC_CLASSES = {"water": {"avg": [170, 300, 450, 150], "std": [10, 10, 10, 10]},
-              "bare_ground": {"avg": [600, 600, 600, 900], "std": [100, 100, 100, 100]},
-              "built_up": {"avg": [800, 800, 800, 1000], "std": [150, 150, 150, 150]},
-              "forest": {"avg": [250, 450, 450, 1300], "std": [30, 30, 30, 30]},
-              "non-forest_vegetation": {"avg": [300, 500, 500, 1100], "std": [100, 100, 100, 100]}}
+LC_CLASSES = {
+    "water": {"avg": [170, 300, 450, 150], "std": [10, 10, 10, 10]},
+    "bare_ground": {"avg": [600, 600, 600, 900], "std": [100, 100, 100, 100]},
+    "built_up": {"avg": [800, 800, 800, 1000], "std": [150, 150, 150, 150]},
+    "forest": {"avg": [250, 450, 450, 1300], "std": [30, 30, 30, 30]},
+    "non-forest_vegetation": {
+        "avg": [300, 500, 500, 1100],
+        "std": [100, 100, 100, 100],
+    },
+}
 
 
 class SyntheticImage:
@@ -42,9 +47,16 @@ class SyntheticImage:
     :return: tuple(Path to the output image, numpy array of image values)
     """
 
-    def __init__(self, xsize: int, ysize: int, num_bands: int, data_type: str,
-                 out_dir: Path = Path('.'), coord_ref_sys: int = 3857,
-                 nodata_fill: int = 0):
+    def __init__(
+        self,
+        xsize: int,
+        ysize: int,
+        num_bands: int,
+        data_type: str,
+        out_dir: Path = Path("."),
+        coord_ref_sys: int = 3857,
+        nodata_fill: int = 0,
+    ):
 
         self.xsize = xsize
         self.ysize = ysize
@@ -61,9 +73,14 @@ class SyntheticImage:
         if seed is not None:
             np.random.seed(seed)
 
-        image, _ = skimage.draw.random_shapes((self.ysize, self.xsize), max_shapes=50,
-                                              min_shapes=25, multichannel=False,
-                                              allow_overlap=True, random_seed=seed)
+        image, _ = skimage.draw.random_shapes(
+            (self.ysize, self.xsize),
+            max_shapes=50,
+            min_shapes=25,
+            multichannel=False,
+            allow_overlap=True,
+            random_seed=seed,
+        )
         # Assign shape values to output classes
         image[image < 55] = 1
         image[(image >= 55) & (image < 105)] = 2
@@ -79,10 +96,12 @@ class SyntheticImage:
 
             for class_idx, lc_class in enumerate(LC_CLASSES.values(), 1):
                 # Add Gaussian noise
-                mask_ar = np.random.normal(lc_class["avg"][band_idx],
-                                           lc_class["std"][band_idx],
-                                           image.shape)
-                data_ar[image == class_idx] = mask_ar[image == class_idx] #pylint: disable=unsubscriptable-object
+                mask_ar = np.random.normal(
+                    lc_class["avg"][band_idx], lc_class["std"][band_idx], image.shape
+                )
+                data_ar[image == class_idx] = mask_ar[
+                    image == class_idx
+                ]  # pylint: disable=unsubscriptable-object
             # Apply median filter to simulate spatial autocorrelation
             data_ar = (signal.medfilt(data_ar)).astype(self.data_type)
             data_ar = np.clip(data_ar, 1, None)
@@ -101,12 +120,19 @@ class SyntheticImage:
 
         transform = from_origin(1470996, 6914001, pix_width, pix_height)
 
-        with rasterio.open(filepath, 'w', driver='GTiff', height=self.ysize, width=self.xsize,
-                           count=self.num_bands, dtype=str(band_list[0].dtype),
-                           crs=crs.CRS.from_epsg(self.crs),
-                           transform=transform) as out_img:
+        with rasterio.open(
+            filepath,
+            "w",
+            driver="GTiff",
+            height=self.ysize,
+            width=self.xsize,
+            count=self.num_bands,
+            dtype=str(band_list[0].dtype),
+            crs=crs.CRS.from_epsg(self.crs),
+            transform=transform,
+        ) as out_img:
             for band_id, layer in enumerate(band_list):
-                layer[0:self.nodata_fill, 0:self.nodata_fill] = 0
+                layer[0 : self.nodata_fill, 0 : self.nodata_fill] = 0
                 out_img.write_band(band_id + 1, layer)
                 out_img.set_band_description(band_id + 1, valid_desc[band_id])
 
