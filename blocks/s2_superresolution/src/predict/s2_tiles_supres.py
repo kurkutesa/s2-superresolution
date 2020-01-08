@@ -9,7 +9,6 @@ from collections import defaultdict
 from typing import List, Tuple
 from pathlib import Path
 import glob
-import warnings
 
 import numpy as np
 from geojson import FeatureCollection
@@ -172,7 +171,7 @@ class Superresolution:
         """
         with rasterio.open(data) as d_s:
             data_crs = d_s.crs.to_dict()
-        utm = data_crs['init']
+        utm = data_crs["init"]
         return utm
 
     # pylint: disable-msg=too-many-locals
@@ -270,8 +269,7 @@ class Superresolution:
                     validated_bands += [name]
                     validated_indices += [i]
                     validated_descriptions[name] = desc
-        return validated_bands, validated_indices, \
-               validated_descriptions
+        return validated_bands, validated_indices, validated_descriptions
 
     @staticmethod
     # pylint: disable-msg=too-many-arguments
@@ -293,9 +291,17 @@ class Superresolution:
             LOGGER.info(term)
             with rasterio.open(data) as d_s:
                 d_final = np.rollaxis(
-                    d_s.read(window=Window(col_off=x_mi, row_off=y_mi,
-                                            width=x_ma - x_mi + n_res, height=y_ma - y_mi + n_res))
-                    , 0, 3)[:, :, term]
+                    d_s.read(
+                        window=Window(
+                            col_off=x_mi,
+                            row_off=y_mi,
+                            width=x_ma - x_mi + n_res,
+                            height=y_ma - y_mi + n_res,
+                        )
+                    ),
+                    0,
+                    3,
+                )[:, :, term]
         return d_final
 
     def conditional_run(self):
@@ -305,8 +311,8 @@ class Superresolution:
         :return:
         """
         condition = False
-        #input_metadata = load_metadata()
-        #if len(input_metadata) > 1:
+        # input_metadata = load_metadata()
+        # if len(input_metadata) > 1:
         #    warnings.warn("The number of image is more than one. Only the first"
         #                  " image will be processed!")
         #    condition = True
@@ -314,6 +320,7 @@ class Superresolution:
         self.run_model(condition)
 
     # pylint: disable-msg=too-many-locals
+    # pylint: disable-msg=too-many-statements
     def run_model(self, condition):
         """
         This method takes the raster data at 10,
@@ -341,34 +348,57 @@ class Superresolution:
             data_list = self.get_data(path_to_input_img)
 
             for dsdesc in data_list:
-                if '10m' in dsdesc:
-                    xmin, ymin, xmax, ymax, interest_area = self.area_of_interest(dsdesc)
+                if "10m" in dsdesc:
+                    xmin, ymin, xmax, ymax, interest_area = self.area_of_interest(
+                        dsdesc
+                    )
                     LOGGER.info("Selected pixel region:")
-                    LOGGER.info('xmin = %s', xmin)
-                    LOGGER.info('ymin = %s', ymin)
-                    LOGGER.info('xmax = %s', xmax)
-                    LOGGER.info('ymax = %s', ymax)
-                    LOGGER.info('The area of selected region = %s', interest_area)
+                    LOGGER.info("xmin = %s", xmin)
+                    LOGGER.info("ymin = %s", ymin)
+                    LOGGER.info("xmax = %s", xmax)
+                    LOGGER.info("ymax = %s", ymax)
+                    LOGGER.info("The area of selected region = %s", interest_area)
                     if xmax < xmin or ymax < ymin:
                         LOGGER.info("Invalid region of interest / UTM Zone combination")
                         sys.exit(0)
 
             for dsdesc in data_list:
-                if '10m' in dsdesc:
+                if "10m" in dsdesc:
                     LOGGER.info("Selected 10m bands:")
-                    validated_10m_bands, validated_10m_indices, dic_10m = self.validate(dsdesc)
-                    data10 = self.data_final(dsdesc, validated_10m_indices,
-                                             xmin, ymin, xmax, ymax, 1)
-                if '20m' in dsdesc:
+                    validated_10m_bands, validated_10m_indices, dic_10m = self.validate(
+                        dsdesc
+                    )
+                    data10 = self.data_final(
+                        dsdesc, validated_10m_indices, xmin, ymin, xmax, ymax, 1
+                    )
+                if "20m" in dsdesc:
                     LOGGER.info("Selected 20m bands:")
-                    validated_20m_bands, validated_20m_indices, dic_20m = self.validate(dsdesc)
-                    data20 = self.data_final(dsdesc, validated_20m_indices,
-                                             xmin // 2, ymin // 2, xmax // 2, ymax // 2, 1 // 2)
-                if '60m' in dsdesc:
+                    validated_20m_bands, validated_20m_indices, dic_20m = self.validate(
+                        dsdesc
+                    )
+                    data20 = self.data_final(
+                        dsdesc,
+                        validated_20m_indices,
+                        xmin // 2,
+                        ymin // 2,
+                        xmax // 2,
+                        ymax // 2,
+                        1 // 2,
+                    )
+                if "60m" in dsdesc:
                     LOGGER.info("Selected 60m bands:")
-                    validated_60m_bands, validated_60m_indices, dic_60m = self.validate(dsdesc)
-                    data60 = self.data_final(dsdesc, validated_60m_indices,
-                                             xmin // 6, ymin // 6, xmax // 6, ymax // 6, 1 // 6)
+                    validated_60m_bands, validated_60m_indices, dic_60m = self.validate(
+                        dsdesc
+                    )
+                    data60 = self.data_final(
+                        dsdesc,
+                        validated_60m_indices,
+                        xmin // 6,
+                        ymin // 6,
+                        xmax // 6,
+                        ymax // 6,
+                        1 // 6,
+                    )
 
             validated_descriptions_all = {**dic_10m, **dic_20m, **dic_60m}
 
@@ -391,7 +421,7 @@ class Superresolution:
                 validated_sr_final_bands = validated_20m_bands + validated_60m_bands
 
             for dsdesc in data_list:
-                if '10m' in dsdesc:
+                if "10m" in dsdesc:
                     p_r = self.update(dsdesc, data10.shape, sr_final, xmin, ymin)
             filename = os.path.join(self.output_dir, path_to_output_img)
 
@@ -424,7 +454,7 @@ class Superresolution:
 
         with rasterio.open(data) as d_s:
             p_r = d_s.profile
-        new_transform = p_r['transform'] * A.translation(xmi, ymi)
+        new_transform = p_r["transform"] * A.translation(xmi, ymi)
         p_r.update(dtype=rasterio.float32)
         p_r.update(driver="GTiff")
         p_r.update(width=size_10m[1])
