@@ -89,7 +89,6 @@ class Superresolution:
 
         return out_fc
 
-    #def get_data(self, image_id) -> Tuple:
     def get_data(self, image_id) -> list:
         """
         This method returns the raster data set of original image for
@@ -105,15 +104,6 @@ class Superresolution:
         raster_data = rasterio.open(data_path)
         datasets = raster_data.subdatasets
 
-        # for dsdesc in datasets:
-        #     if '10m' in dsdesc:
-        #         d_1 = rasterio.open(dsdesc)
-        #     elif '20m' in dsdesc:
-        #         d_2 = rasterio.open(dsdesc)
-        #     elif '60m' in dsdesc:
-        #         d_6 = rasterio.open(dsdesc)
-
-        #return d_1, d_2, d_6
         return datasets
 
     @staticmethod
@@ -348,7 +338,6 @@ class Superresolution:
             path_to_input_img = feature["properties"][SENTINEL2_L1C]
             path_to_output_img = Path(path_to_input_img).stem + "_superresolution.tif"
 
-            #d_1, d_2, d_6 = self.get_data(path_to_input_img)
             data_list = self.get_data(path_to_input_img)
 
             for dsdesc in data_list:
@@ -370,13 +359,11 @@ class Superresolution:
                     validated_10m_bands, validated_10m_indices, dic_10m = self.validate(dsdesc)
                     data10 = self.data_final(dsdesc, validated_10m_indices,
                                              xmin, ymin, xmax, ymax, 1)
-            for dsdesc in data_list:
                 if '20m' in dsdesc:
                     LOGGER.info("Selected 20m bands:")
                     validated_20m_bands, validated_20m_indices, dic_20m = self.validate(dsdesc)
                     data20 = self.data_final(dsdesc, validated_20m_indices,
                                              xmin // 2, ymin // 2, xmax // 2, ymax // 2, 1 // 2)
-            for dsdesc in data_list:
                 if '60m' in dsdesc:
                     LOGGER.info("Selected 60m bands:")
                     validated_60m_bands, validated_60m_indices, dic_60m = self.validate(dsdesc)
@@ -384,13 +371,6 @@ class Superresolution:
                                              xmin // 6, ymin // 6, xmax // 6, ymax // 6, 1 // 6)
 
             validated_descriptions_all = {**dic_10m, **dic_20m, **dic_60m}
-
-            #data10 = self.data_final(d_1, validated_10m_indices,
-             #                        xmin, ymin, xmax, ymax, 1)
-            #data20 = self.data_final(d_2, validated_20m_indices,
-             #                        xmin // 2, ymin // 2, xmax // 2, ymax // 2, 1 // 2)
-            #data60 = self.data_final(d_6, validated_60m_indices,
-             #                        xmin // 6, ymin // 6, xmax // 6, ymax // 6, 1 // 6)
 
             if validated_60m_bands and validated_20m_bands and validated_10m_bands:
                 LOGGER.info("Super-resolving the 60m data into 10m bands")
@@ -410,7 +390,6 @@ class Superresolution:
                 sr_final = np.concatenate((sr20, sr60), axis=2)
                 validated_sr_final_bands = validated_20m_bands + validated_60m_bands
 
-            #p_r = self.update(d_1, data10.shape, sr_final, xmin, ymin)
             for dsdesc in data_list:
                 if '10m' in dsdesc:
                     p_r = self.update(dsdesc, data10.shape, sr_final, xmin, ymin)
