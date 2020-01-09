@@ -31,9 +31,9 @@ def test_get_max_min():
     test_img, _ = SyntheticImage(40, 40, 4, "uint16", test_dir, 32640).create(
         pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
     )
-    dsr = rasterio.open(test_img)
+    # dsr = rasterio.open(test_img)
     dsr_xmin, dsr_ymin, dsr_xmax, dsr_ymax, dsr_area = Superresolution.get_max_min(
-        0, 0, 10, 10, dsr
+        0, 0, 10, 10, test_img
     )
 
     assert dsr_xmin == dsr_xmin_exm
@@ -61,8 +61,8 @@ def test_to_xy():
     test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir, 32640).create(
         pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
     )
-    dsr = rasterio.open(test_img)
-    dsr_x, dsr_y = s_2.to_xy(lon=1, lat=40, data=dsr)
+    # dsr = rasterio.open(test_img)
+    dsr_x, dsr_y = s_2.to_xy(lon=1, lat=40, data=test_img)
 
     assert dsr_x == dsr_x_exm
     assert dsr_y == dsr_y_exm
@@ -83,8 +83,8 @@ def test_get_utm():
     test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir, 32640).create(
         pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
     )
-    dsr = rasterio.open(test_img)
-    dsr_utm = Superresolution.get_utm(dsr)
+    # dsr = rasterio.open(test_img)
+    dsr_utm = Superresolution.get_utm(test_img)
 
     assert dsr_utm == utm_exm
 
@@ -114,8 +114,8 @@ def test_area_of_interest():
     test_img, _ = SyntheticImage(40, 40, 4, "uint16", test_dir, 32640).create(
         pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
     )
-    dsr = rasterio.open(test_img)
-    dsr_xmin, dsr_ymin, dsr_xmax, dsr_ymax, dsr_area = s_2.area_of_interest(dsr)
+    # dsr = rasterio.open(test_img)
+    dsr_xmin, dsr_ymin, dsr_xmax, dsr_ymax, dsr_area = s_2.area_of_interest(test_img)
 
     assert dsr_xmin == dsr_xmin_exm
     assert dsr_ymin == dsr_ymin_exm
@@ -194,11 +194,11 @@ def test_validate():
     test_img_10, _ = SyntheticImage(20, 18, 4, "uint16", test_dir).create(
         pix_width=10, pix_height=10, valid_desc=valid_desc_10, seed=45
     )
-    ds10r = rasterio.open(test_img_10)
+    # ds10r = rasterio.open(test_img_10)
 
     validated_10m_indices_exm = [0, 1, 2, 3]
     validated_10m_bands_exm = ["B2", "B3", "B4", "B8"]
-    validated_10m_bands, validated_10m_indices, _ = s_2.validate(data=ds10r)
+    validated_10m_bands, validated_10m_indices, _ = s_2.validate(data=test_img_10)
 
     assert set(validated_10m_bands) == set(validated_10m_bands_exm)
     assert validated_10m_indices == validated_10m_indices_exm
@@ -219,7 +219,7 @@ def test_data_final():
     test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir).create(
         pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
     )
-    dsr = rasterio.open(test_img)
+    # dsr = rasterio.open(test_img)
 
-    d_final = Superresolution.data_final(dsr, valid_indices, 0, 0, 5, 5, 1)
+    d_final = Superresolution.data_final(test_img, valid_indices, 0, 0, 5, 5, 1)
     assert d_final.shape == (6, 6, 4)

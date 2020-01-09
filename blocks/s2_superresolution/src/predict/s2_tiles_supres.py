@@ -9,7 +9,6 @@ from collections import defaultdict
 from typing import List, Tuple
 from pathlib import Path
 import glob
-import warnings
 
 import numpy as np
 from geojson import FeatureCollection
@@ -89,7 +88,7 @@ class Superresolution:
 
         return out_fc
 
-    def get_data(self, image_id) -> Tuple:
+    def get_data(self, image_id) -> list:
         """
         This method returns the raster data set of original image for
         all the available resolutions.
@@ -104,15 +103,7 @@ class Superresolution:
         raster_data = rasterio.open(data_path)
         datasets = raster_data.subdatasets
 
-        for dsdesc in datasets:
-            if "10m" in dsdesc:
-                d_1 = rasterio.open(dsdesc)
-            elif "20m" in dsdesc:
-                d_2 = rasterio.open(dsdesc)
-            elif "60m" in dsdesc:
-                d_6 = rasterio.open(dsdesc)
-
-        return d_1, d_2, d_6
+        return datasets
 
     @staticmethod
     def get_max_min(x_1: int, y_1: int, x_2: int, y_2: int, data) -> Tuple:
@@ -125,10 +116,14 @@ class Superresolution:
         (0, 0, 395, 395, 156816)
 
         """
-        tmxmin = max(min(x_1, x_2, data.width - 1), 0)
-        tmxmax = min(max(x_1, x_2, 0), data.width - 1)
-        tmymin = max(min(y_1, y_2, data.height - 1), 0)
-        tmymax = min(max(y_1, y_2, 0), data.height - 1)
+        with rasterio.open(data) as d_s:
+            d_width = d_s.width
+            d_height = d_s.height
+
+        tmxmin = max(min(x_1, x_2, d_width - 1), 0)
+        tmxmax = min(max(x_1, x_2, 0), d_width - 1)
+        tmymin = max(min(y_1, y_2, d_height - 1), 0)
+        tmymax = min(max(y_1, y_2, 0), d_height - 1)
         # enlarge to the nearest 60 pixel boundary for the super-resolution
         tmxmin = int(tmxmin / 6) * 6
         tmxmax = int((tmxmax + 1) / 6) * 6 - 1
@@ -147,7 +142,8 @@ class Superresolution:
         :return: The pixel location in the coordinate system of the input image
         """
         # get the image's coordinate system.
-        coor = data.transform
+        with rasterio.open(data) as d_s:
+            coor = d_s.transform
         a_t, b_t, xoff, d_t, e_t, yoff = [coor[x] for x in range(6)]
 
         # transform the lat and lon into x and y position which are defined in
@@ -173,7 +169,8 @@ class Superresolution:
         :param data: The raster file for a specific resolution.
         :return: UTM of the selected raster file.
         """
-        data_crs = data.crs.to_dict()
+        with rasterio.open(data) as d_s:
+            data_crs = d_s.crs.to_dict()
         utm = data_crs["init"]
         return utm
 
@@ -182,6 +179,10 @@ class Superresolution:
         """
         This method returns the coordinates that define the desired area of interest.
         """
+        with rasterio.open(data) as d_s:
+            d_width = d_s.width
+            d_height = d_s.height
+
         if self.params["roi_x_y"] is not None:
             roi_x1, roi_y1, roi_x2, roi_y2 = self.params.get("roi_x_y")
             xmi, ymi, xma, yma, area = self.get_max_min(
@@ -193,13 +194,7 @@ class Superresolution:
             x_2, y_2 = self.to_xy(roi_lon2, roi_lat2, data)
             xmi, ymi, xma, yma, area = self.get_max_min(x_1, y_1, x_2, y_2, data)
         else:
-            xmi, ymi, xma, yma, area = (
-                0,
-                0,
-                data.width,
-                data.height,
-                data.width * data.height,
-            )
+            xmi, ymi, xma, yma, area = (0, 0, d_width, d_height, d_width * d_height)
 
         return xmi, ymi, xma, yma, area
 
@@ -265,14 +260,15 @@ class Superresolution:
         validated_bands = []  # type: list
         validated_indices = []  # type: list
         validated_descriptions = defaultdict(str)  # type: defaultdict
-        for i in range(0, data.count):
-            desc = self.validate_description(data.descriptions[i])
-            name = self.get_band_short_name(desc)
-            if name in select_bands:
-                select_bands.remove(name)
-                validated_bands += [name]
-                validated_indices += [i]
-                validated_descriptions[name] = desc
+        with rasterio.open(data) as d_s:
+            for i in range(0, d_s.count):
+                desc = self.validate_description(d_s.descriptions[i])
+                name = self.get_band_short_name(desc)
+                if name in select_bands:
+                    select_bands.remove(name)
+                    validated_bands += [name]
+                    validated_indices += [i]
+                    validated_descriptions[name] = desc
         return validated_bands, validated_indices, validated_descriptions
 
     @staticmethod
@@ -292,19 +288,20 @@ class Superresolution:
         :return: The numpy array of pixels' value.
         """
         if term:
-            print(term)
-            d_final = np.rollaxis(
-                data.read(
-                    window=Window(
-                        col_off=x_mi,
-                        row_off=y_mi,
-                        width=x_ma - x_mi + n_res,
-                        height=y_ma - y_mi + n_res,
-                    )
-                ),
-                0,
-                3,
-            )[:, :, term]
+            LOGGER.info(term)
+            with rasterio.open(data) as d_s:
+                d_final = np.rollaxis(
+                    d_s.read(
+                        window=Window(
+                            col_off=x_mi,
+                            row_off=y_mi,
+                            width=x_ma - x_mi + n_res,
+                            height=y_ma - y_mi + n_res,
+                        )
+                    ),
+                    0,
+                    3,
+                )[:, :, term]
         return d_final
 
     def conditional_run(self):
@@ -314,17 +311,16 @@ class Superresolution:
         :return:
         """
         condition = False
-        input_metadata = load_metadata()
-        if len(input_metadata) > 1:
-            warnings.warn(
-                "The number of image is more than one. Only the first"
-                " image will be processed!"
-            )
-            condition = True
+        # input_metadata = load_metadata()
+        # if len(input_metadata) > 1:
+        #    warnings.warn("The number of image is more than one. Only the first"
+        #                  " image will be processed!")
+        #    condition = True
 
         self.run_model(condition)
 
     # pylint: disable-msg=too-many-locals
+    # pylint: disable-msg=too-many-statements
     def run_model(self, condition):
         """
         This method takes the raster data at 10,
@@ -349,51 +345,62 @@ class Superresolution:
             path_to_input_img = feature["properties"][SENTINEL2_L1C]
             path_to_output_img = Path(path_to_input_img).stem + "_superresolution.tif"
 
-            d_1, d_2, d_6 = self.get_data(path_to_input_img)
+            data_list = self.get_data(path_to_input_img)
 
-            xmin, ymin, xmax, ymax, interest_area = self.area_of_interest(d_1)
-            LOGGER.info("Selected pixel region:")
-            LOGGER.info("xmin = %s", xmin)
-            LOGGER.info("ymin = %s", ymin)
-            LOGGER.info("xmax = %s", xmax)
-            LOGGER.info("ymax = %s", ymax)
-            LOGGER.info("The area of selected region = %s", interest_area)
-            if xmax < xmin or ymax < ymin:
-                LOGGER.info("Invalid region of interest / UTM Zone combination")
-                sys.exit(0)
+            for dsdesc in data_list:
+                if "10m" in dsdesc:
+                    xmin, ymin, xmax, ymax, interest_area = self.area_of_interest(
+                        dsdesc
+                    )
+                    LOGGER.info("Selected pixel region:")
+                    LOGGER.info("xmin = %s", xmin)
+                    LOGGER.info("ymin = %s", ymin)
+                    LOGGER.info("xmax = %s", xmax)
+                    LOGGER.info("ymax = %s", ymax)
+                    LOGGER.info("The area of selected region = %s", interest_area)
+                    if xmax < xmin or ymax < ymin:
+                        LOGGER.info("Invalid region of interest / UTM Zone combination")
+                        sys.exit(0)
 
-            LOGGER.info("Selected 10m bands:")
-            validated_10m_bands, validated_10m_indices, dic_10m = self.validate(d_1)
-
-            LOGGER.info("Selected 20m bands:")
-            validated_20m_bands, validated_20m_indices, dic_20m = self.validate(d_2)
-
-            LOGGER.info("Selected 60m bands:")
-            validated_60m_bands, validated_60m_indices, dic_60m = self.validate(d_6)
+            for dsdesc in data_list:
+                if "10m" in dsdesc:
+                    LOGGER.info("Selected 10m bands:")
+                    validated_10m_bands, validated_10m_indices, dic_10m = self.validate(
+                        dsdesc
+                    )
+                    data10 = self.data_final(
+                        dsdesc, validated_10m_indices, xmin, ymin, xmax, ymax, 1
+                    )
+                if "20m" in dsdesc:
+                    LOGGER.info("Selected 20m bands:")
+                    validated_20m_bands, validated_20m_indices, dic_20m = self.validate(
+                        dsdesc
+                    )
+                    data20 = self.data_final(
+                        dsdesc,
+                        validated_20m_indices,
+                        xmin // 2,
+                        ymin // 2,
+                        xmax // 2,
+                        ymax // 2,
+                        1 // 2,
+                    )
+                if "60m" in dsdesc:
+                    LOGGER.info("Selected 60m bands:")
+                    validated_60m_bands, validated_60m_indices, dic_60m = self.validate(
+                        dsdesc
+                    )
+                    data60 = self.data_final(
+                        dsdesc,
+                        validated_60m_indices,
+                        xmin // 6,
+                        ymin // 6,
+                        xmax // 6,
+                        ymax // 6,
+                        1 // 6,
+                    )
 
             validated_descriptions_all = {**dic_10m, **dic_20m, **dic_60m}
-
-            data10 = self.data_final(
-                d_1, validated_10m_indices, xmin, ymin, xmax, ymax, 1
-            )
-            data20 = self.data_final(
-                d_2,
-                validated_20m_indices,
-                xmin // 2,
-                ymin // 2,
-                xmax // 2,
-                ymax // 2,
-                1 // 2,
-            )
-            data60 = self.data_final(
-                d_6,
-                validated_60m_indices,
-                xmin // 6,
-                ymin // 6,
-                xmax // 6,
-                ymax // 6,
-                1 // 6,
-            )
 
             if validated_60m_bands and validated_20m_bands and validated_10m_bands:
                 LOGGER.info("Super-resolving the 60m data into 10m bands")
@@ -413,7 +420,9 @@ class Superresolution:
                 sr_final = np.concatenate((sr20, sr60), axis=2)
                 validated_sr_final_bands = validated_20m_bands + validated_60m_bands
 
-            p_r = self.update(d_1, data10.shape, sr_final, xmin, ymin)
+            for dsdesc in data_list:
+                if "10m" in dsdesc:
+                    p_r = self.update(dsdesc, data10.shape, sr_final, xmin, ymin)
             filename = os.path.join(self.output_dir, path_to_output_img)
 
             LOGGER.info("Now writing the super-resolved bands")
@@ -443,7 +452,8 @@ class Superresolution:
         else:
             out_dims = model_output.shape[2]
 
-        p_r = data.profile
+        with rasterio.open(data) as d_s:
+            p_r = d_s.profile
         new_transform = p_r["transform"] * A.translation(xmi, ymi)
         p_r.update(dtype=rasterio.float32)
         p_r.update(driver="GTiff")
