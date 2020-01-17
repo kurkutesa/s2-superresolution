@@ -65,13 +65,7 @@ def load_params() -> dict:
 
 # pylint: disable-msg=too-many-arguments
 def save_result(
-    model_output,
-    output_bands,
-    valid_desc,
-    output_profile,
-    output_features,
-    output_dir,
-    image_name,
+    model_output, output_bands, valid_desc, output_profile, image_name,
 ):
     """
     This method saves the feature collection meta data and the
@@ -81,8 +75,6 @@ def save_result(
     :param valid_desc: The valid description of the existing bands.
     :param output_profile: The georeferencing for the output image.
     :param output_features: The meta data for the output image.
-    :param output_dir: The directory in which the output image
-        and associated meta data will be saved.
     :param image_name: The name of the output image.
 
     """
@@ -91,6 +83,3 @@ def save_result(
         for b_i, b_n in enumerate(output_bands):
             d_s.write(model_output[:, :, b_i], indexes=b_i + 1)
             d_s.set_band_description(b_i + 1, "SR " + valid_desc[b_n])
-
-    with open(output_dir + "data.json", "w") as f_p:
-        f_p.write(json.dumps(output_features, indent=2))

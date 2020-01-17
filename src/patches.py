@@ -13,7 +13,7 @@ from scipy.ndimage.filters import gaussian_filter
 from skimage.transform import resize
 import skimage.measure
 
-from predict.helper import get_logger
+from helper import get_logger
 
 LOGGER = get_logger(__name__)
 

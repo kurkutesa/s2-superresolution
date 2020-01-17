@@ -1,7 +1,6 @@
 ## Configuration for Makefile.
-SRC := blocks/s2_superresolution
 UP42_DOCKERFILE := Dockerfile
-UP42_MANIFEST := $(SRC)/UP42Manifest.json
+UP42_MANIFEST := UP42Manifest.json
 DOCKER_TAG := s2-superresolution
 DOCKER_VERSION := latest
 
@@ -9,11 +8,11 @@ VALIDATE_ENDPOINT := https://api.up42.com/validate-schema/block
 REGISTRY := registry.up42.com
 
 install:
-	pip install -r $(SRC)/requirements.txt
+	pip install -r requirements.txt
 
 test:
 	black .
-	python -m pytest --pylint --pylint-rcfile=../../pylintrc --mypy --mypy-ignore-missing-imports --cov=$(SRC)/src/
+	python -m pytest --pylint --pylint-rcfile=pylintrc --mypy --mypy-ignore-missing-imports --cov=src/
 
 clean:
 	find . -name "__pycache__" -exec rm -rf {} +
@@ -22,13 +21,13 @@ clean:
 	find . -name ".coverage" -exec rm -f {} +
 
 validate:
-	cd $(SRC);	curl -X POST -H 'Content-Type: application/json' -d @UP42Manifest.json $(VALIDATE_ENDPOINT)
+	cd ;	curl -X POST -H 'Content-Type: application/json' -d @UP42Manifest.json $(VALIDATE_ENDPOINT)
 
 build:
 ifdef UID
-	cd $(SRC); docker build --build-arg manifest='$(shell cat ${UP42_MANIFEST})' -f $(UP42_DOCKERFILE) -t $(REGISTRY)/$(UID)/$(DOCKER_TAG):$(DOCKER_VERSION) .
+	docker build --build-arg manifest='$(shell cat ${UP42_MANIFEST})' -f $(UP42_DOCKERFILE) -t $(REGISTRY)/$(UID)/$(DOCKER_TAG):$(DOCKER_VERSION) .
 else
-	cd $(SRC); docker build --build-arg manifest='$(shell cat ${UP42_MANIFEST})'  -f $(UP42_DOCKERFILE) -t $(DOCKER_TAG) .
+	docker build --build-arg manifest='$(shell cat ${UP42_MANIFEST})'  -f $(UP42_DOCKERFILE) -t $(DOCKER_TAG) .
 endif
 
 push:

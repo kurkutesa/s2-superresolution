@@ -1,24 +1,19 @@
 """
 This module creates the super-resolution image based on the trained CNN defined in dsen2Net script.
 """
-import sys
-import os
 import gc
 
 import numpy as np
 import keras.backend as K
 import tensorflow as tf
 
-# pylint: disable=wrong-import-position
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../")))
-from utils.dsen2net import s2model
-from utils.patches import get_test_patches, get_test_patches60, recompose_images
+from dsen2net import s2model
+from patches import get_test_patches, get_test_patches60, recompose_images
 from helper import get_logger
 
 
 SCALE = 2000
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../../")))
-MDL_PATH = "weights/"
+MDL_PATH = "./weights/"
 LOGGER = get_logger(__name__)
 
 # This code is adapted from this repository

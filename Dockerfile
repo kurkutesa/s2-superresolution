@@ -21,4 +21,4 @@ COPY src /block/src
 COPY weights /block/weights
 
 # Invoke run.py.
-CMD ["python", "/block/src/predict/run.py"]
+CMD ["python", "/block/src/run.py"]

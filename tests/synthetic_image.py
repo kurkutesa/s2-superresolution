@@ -11,7 +11,7 @@ import skimage.draw
 from scipy import signal
 import numpy as np
 
-from predict.helper import get_logger
+from helper import get_logger
 
 LOGGER = get_logger(__name__)
 
