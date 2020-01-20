@@ -15,7 +15,6 @@ from helper import get_logger
 SCALE = 2000
 MDL_PATH = "./weights/"
 LOGGER = get_logger(__name__)
-
 # This code is adapted from this repository
 # https://github.com/lanha/DSen2 and is distributed under the same
 # license.

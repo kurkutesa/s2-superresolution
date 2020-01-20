@@ -11,8 +11,7 @@ install:
 	pip install -r requirements.txt
 
 test:
-	black .
-	python -m pytest --pylint --pylint-rcfile=pylintrc --mypy --mypy-ignore-missing-imports --cov=src/
+	bash test.sh
 
 clean:
 	find . -name "__pycache__" -exec rm -rf {} +
@@ -39,4 +38,7 @@ login:
 e2e:
 	python e2e.py
 
-.PHONY: build login push test install e2e push login
+e2e[compose]:
+	python e2e_compose.py ${PARAMS}
+
+.PHONY: build login push test install e2e e2e[compose] push login

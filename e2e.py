@@ -8,33 +8,8 @@ import os
 import geojson
 import rasterio
 
-if __name__ == "__main__":
-    TESTNAME = "e2e_s2-superresolution"
-    TEST_DIR = Path("/tmp") / TESTNAME
-    TEST_DIR.mkdir(parents=True, exist_ok=True)
-    INPUT_DIR = TEST_DIR / "input"
-    FILES_TO_DELETE = Path(TEST_DIR / "output").glob("*")
-    for file_path in FILES_TO_DELETE:
-        file_path.unlink()
-
-    # Prepare input data
-    if not os.path.isdir(INPUT_DIR):
-        INPUT_DIR.mkdir(parents=True, exist_ok=True)
-        os.system(
-            "gsutil -m cp -r gs://floss-blocks-e2e-testing/e2e_s2_superresolution/* %s"
-            % INPUT_DIR
-        )
-
-    RUN_CMD = (
-        """docker run -v %s:/tmp \
-                 -e 'UP42_TASK_PARAMETERS={"roi_x_y": [5000, 5000, 5250, 5250], \
-                 "copy_original_bands": false}' \
-                 -it s2-superresolution"""
-        % TEST_DIR
-    )
-
-    os.system(RUN_CMD)
-
+# pylint: disable=invalid-name
+def assert_e2e():
     # Print out bbox of one tile
     GEOJSON_PATH = TEST_DIR / "output" / "data.json"
 
@@ -73,3 +48,33 @@ if __name__ == "__main__":
     # Check whether the outcome image has the correct georeference.
     CRS_EXM = {"init": "epsg:32633"}
     assert OUTPUT_IMAGE.crs.to_dict() == CRS_EXM
+
+
+if __name__ == "__main__":
+    TESTNAME = "e2e_s2-superresolution"
+    TEST_DIR = Path("/tmp") / TESTNAME
+    TEST_DIR.mkdir(parents=True, exist_ok=True)
+    INPUT_DIR = TEST_DIR / "input"
+    FILES_TO_DELETE = Path(TEST_DIR / "output").glob("*")
+    for file_path in FILES_TO_DELETE:
+        file_path.unlink()
+
+    # Prepare input data
+    if not os.path.isdir(INPUT_DIR):
+        INPUT_DIR.mkdir(parents=True, exist_ok=True)
+        os.system(
+            "gsutil -m cp -r gs://floss-blocks-e2e-testing/e2e_s2_superresolution/* %s"
+            % INPUT_DIR
+        )
+
+    RUN_CMD = (
+        """docker run -v %s:/tmp \
+                 -e 'UP42_TASK_PARAMETERS={"roi_x_y": [5000, 5000, 5250, 5250], \
+                 "copy_original_bands": false}' \
+                 -it s2-superresolution"""
+        % TEST_DIR
+    )
+
+    os.system(RUN_CMD)
+
+    assert_e2e()

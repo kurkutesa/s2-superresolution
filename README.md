@@ -1,4 +1,5 @@
 # Sentinel 2 Super-Resolution processing block
+![coverage](coverage.svg)
 ## Introduction
 
 This is a state of the art processing block using a [Convolutional Neural Network](https://en.wikipedia.org/wiki/Convolutional_neural_network)
@@ -168,4 +169,3 @@ make push UID=<UID> DOCKER_TAG=<docker tag> DOCKER_VERSION=<docker version>
 ## Support, questions and suggestions
 
 Open a **github issue** in this repository; we are happy to answer your questions!
-

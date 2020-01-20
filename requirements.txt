@@ -12,3 +12,4 @@ pyproj
 geojson
 mock
 black
+coverage-badge

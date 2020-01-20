@@ -25,11 +25,11 @@ def resblock(x_input, channels, kernel_size=None, scale=0.1):
     if kernel_size is None:
         kernel_size = [3, 3]
     tmp = Conv2D(
-        channels, kernel_size, kernel_initializer="he_uniform", padding="same"
+        channels, kernel_size, kernel_initializer="he_uniform", padding="same",
     )(x_input)
     tmp = Activation("relu")(tmp)
     tmp = Conv2D(
-        channels, kernel_size, kernel_initializer="he_uniform", padding="same"
+        channels, kernel_size, kernel_initializer="he_uniform", padding="same",
     )(tmp)
     tmp = Lambda(lambda x: x * scale)(tmp)
 
