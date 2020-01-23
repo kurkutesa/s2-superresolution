@@ -69,7 +69,7 @@ if __name__ == "__main__":
 
     RUN_CMD = (
         """docker run -v %s:/tmp \
-                 -e 'UP42_TASK_PARAMETERS={"roi_x_y": [5000, 5000, 5250, 5250], \
+                 -e 'UP42_TASK_PARAMETERS={"bbox": [12.211, 52.291, 12.513, 52.521], "clip_to_aoi": true, \
                  "copy_original_bands": false}' \
                  -it s2-superresolution"""
         % TEST_DIR

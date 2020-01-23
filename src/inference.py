@@ -20,7 +20,15 @@ class SuperresolutionProcess(Superresolution):
 
         for dsdesc in data_list:
             if "10m" in dsdesc:
-                xmin, ymin, xmax, ymax, interest_area = self.area_of_interest(dsdesc)
+                if self.params.__dict__["clip_to_aoi"]:
+                    xmin, ymin, xmax, ymax, interest_area = self.area_of_interest(
+                        dsdesc
+                    )
+                else:
+                    # Get the pixel bounds of the full scene
+                    xmin, ymin, xmax, ymax, interest_area = self.get_max_min(
+                        0, 0, 20000, 2000, dsdesc
+                    )
                 LOGGER.info("Selected pixel region:")
                 LOGGER.info("xmin = %s", xmin)
                 LOGGER.info("ymin = %s", ymin)
@@ -80,7 +88,7 @@ class SuperresolutionProcess(Superresolution):
             LOGGER.info("No super-resolution performed, exiting")
             sys.exit(0)
 
-        if self.params["copy_original_bands"]:
+        if self.params.__dict__["copy_original_bands"]:
             sr_final = np.concatenate((data10, sr20, sr60), axis=2)
             validated_sr_final_bands = (
                 validated_10m_bands + validated_20m_bands + validated_60m_bands

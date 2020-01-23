@@ -96,12 +96,12 @@ def test_area_of_interest():
     """
     dsr_xmin_exm, dsr_ymin_exm, dsr_xmax_exm, dsr_ymax_exm, dsr_area_exm = (
         0,
-        0,
-        11,
-        11,
-        144,
+        18,
+        17,
+        35,
+        324,
     )
-    params = {"roi_x_y": [5, 5, 15, 15]}
+    params = {"bbox": [75.192123, 61.127161, 75.195960, 61.127993]}
     s_2 = Superresolution(params)
 
     test_dir = Path(tempfile.mkdtemp())

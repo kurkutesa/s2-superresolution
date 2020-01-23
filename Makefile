@@ -1,4 +1,5 @@
 ## Configuration for Makefile.
+TF1_PY37_DOCKERFILE := libs/Dockerfile-tensorflow1-python37
 UP42_DOCKERFILE := Dockerfile
 UP42_MANIFEST := UP42Manifest.json
 DOCKER_TAG := s2-superresolution
@@ -21,6 +22,9 @@ clean:
 
 validate:
 	cd ;	curl -X POST -H 'Content-Type: application/json' -d @UP42Manifest.json $(VALIDATE_ENDPOINT)
+
+build-image-tensorflow1-python37:
+	docker build -f $(TF1_PY37_DOCKERFILE) -t up42-tf1-py37 .
 
 build:
 ifdef UID

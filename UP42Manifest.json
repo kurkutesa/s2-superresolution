@@ -1,27 +1,44 @@
 {
-    "_up42_specification_version": 1,
-    "name": "superresolution",
-    "type": "processing",
-    "tags": [
-        "imagery",
-        "processing",
-        "deep learning",
-        "convolutional neural network"
-    ],
-    "display_name": "Sentinel-2 Super-resolution",
-    "description": "This block takes an Sentinel-2 image and runs superresolution algorithm on it.\nThis algorithm creates a 10m resolution for all the existing spectral bands within 20m and 60m resolutions by using a trained convolutional neural network",
-    "parameters": {
-        "roi_x_y": {"type": "array", "default": [5000, 5000, 5500, 5500]},
-        "roi_lon_lat": {"type": "array", "default": null},
-        "copy_original_bands": {"type":  "boolean", "default":  true}
+  "_up42_specification_version": 1,
+  "name": "superresolution",
+  "type": "processing",
+  "tags": [
+    "imagery",
+    "processing",
+    "deep learning",
+    "convolutional neural network"
+  ],
+  "display_name": "Sentinel-2 Super-resolution",
+  "description": "This block takes an Sentinel-2 image and runs superresolution algorithm on it.\nThis algorithm creates a 10m resolution for all the existing spectral bands within 20m and 60m resolutions by using a trained convolutional neural network",
+  "parameters": {
+    "bbox": {
+      "type": "array",
+      "default": null
     },
-    "machine": {
-	    "type": "gpu_nvidia_tesla_k80"
+    "intersects": {
+      "type": "geometry",
+      "default": null
     },
-    "input_capabilities": {
-        "up42.data.scene.sentinel2_l1c": {}
+    "contains": {
+      "type": "geometry",
+      "default": null
     },
-    "output_capabilities": {
-        "up42.data.aoiclipped": {}
+    "copy_original_bands": {
+      "type": "boolean",
+      "default": true
+    },
+    "clip_to_aoi": {
+      "type": "boolean",
+      "default": false
     }
+  },
+  "machine": {
+    "type": "gpu_nvidia_tesla_k80"
+  },
+  "input_capabilities": {
+    "up42.data.scene.sentinel2_l1c": {}
+  },
+  "output_capabilities": {
+    "up42.data.aoiclipped": {}
+  }
 }

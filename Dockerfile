@@ -1,8 +1,7 @@
 ### Dockerfile to build the UP42 superresolution block.
 
-# Use one of the official Tensorflow Docker images as base.
-FROM tensorflow/tensorflow:latest-gpu-py3
-# FROM tensorflow/tensorflow:1.13.1-py3
+# Use up42 python 3.7 tensorflow 1 base image
+FROM up42-tf1-py37
 
 # The manifest file contains metadata for correctly building and
 # tagging the Docker image. This is a build time argument.

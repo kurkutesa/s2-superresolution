@@ -17,6 +17,7 @@ import rasterio
 from rasterio.windows import Window
 from rasterio import Affine as A
 import pyproj as proj
+from stac import STACQuery
 from helper import (
     get_logger,
     load_metadata,
@@ -40,7 +41,7 @@ class Superresolution:
 
     def __init__(
         self,
-        params: dict,
+        params: STACQuery,
         output_dir: str = "/tmp/output/",
         input_dir: str = "/tmp/input/",
         data_folder: str = "*/MTD*.xml",
@@ -51,27 +52,18 @@ class Superresolution:
         :param data_folder: The original image file.
         """
 
+        params = STACQuery.from_dict(params, lambda x: True)
+        params.set_param_if_not_exists("copy_original_bands", False)
+        params.set_param_if_not_exists("clip_to_aoi", False)
+
         self.params = params
-        try:
-            params["copy_original_bands"]
-        except KeyError:
-            params["copy_original_bands"] = False
-        try:
-            params["roi_x_y"]
-        except KeyError:
-            params["roi_x_y"] = None
-        try:
-            params["roi_lon_lat"]
-        except KeyError:
-            params["roi_lon_lat"] = None
 
         self.output_dir = output_dir
         self.input_dir = input_dir
         self.data_folder = data_folder
 
     # pylint: disable-msg=too-many-locals
-    @staticmethod
-    def get_final_json() -> FeatureCollection:
+    def get_final_json(self) -> FeatureCollection:
         """
         This method return an output json file.
         """
@@ -81,6 +73,9 @@ class Superresolution:
             path_to_input_img = feature["properties"][SENTINEL2_L1C]
             path_to_output_img = Path(path_to_input_img).stem + "_superresolution.tif"
             out_feature = feature.copy()
+            if self.params.__dict__["clip_to_aoi"]:
+                out_feature["geometry"] = self.params.geometry()
+                out_feature["bbox"] = self.params.bounds()
             out_feature["properties"]["up42.data.aoiclipped"] = path_to_output_img
             feature_list.append(out_feature)
         out_fc = FeatureCollection(feature_list)
@@ -178,23 +173,11 @@ class Superresolution:
         """
         This method returns the coordinates that define the desired area of interest.
         """
-        with rasterio.open(data) as d_s:
-            d_width = d_s.width
-            d_height = d_s.height
 
-        if self.params["roi_x_y"] is not None:
-            roi_x1, roi_y1, roi_x2, roi_y2 = self.params.get("roi_x_y")
-            xmi, ymi, xma, yma, area = self.get_max_min(
-                roi_x1, roi_y1, roi_x2, roi_y2, data
-            )
-        elif self.params["roi_lon_lat"] is not None:
-            roi_lon1, roi_lat1, roi_lon2, roi_lat2 = self.params.get("roi_lon_lat")
-            x_1, y_1 = self.to_xy(roi_lon1, roi_lat1, data)
-            x_2, y_2 = self.to_xy(roi_lon2, roi_lat2, data)
-            xmi, ymi, xma, yma, area = self.get_max_min(x_1, y_1, x_2, y_2, data)
-        else:
-            xmi, ymi, xma, yma, area = (0, 0, d_width, d_height, d_width * d_height)
-
+        roi_lon1, roi_lat1, roi_lon2, roi_lat2 = self.params.bounds()
+        x_1, y_1 = self.to_xy(roi_lon1, roi_lat1, data)
+        x_2, y_2 = self.to_xy(roi_lon2, roi_lat2, data)
+        xmi, ymi, xma, yma, area = self.get_max_min(x_1, y_1, x_2, y_2, data)
         return xmi, ymi, xma, yma, area
 
     @staticmethod
@@ -319,6 +302,7 @@ class Superresolution:
         :param condition: A flag to make sure only one image will be processed.
         """
         input_fc = load_metadata().features
+        self.assert_input_params()
         output_jsonfile = self.get_final_json()
 
         for feature in input_fc:
@@ -349,7 +333,7 @@ class Superresolution:
 
         """
         # Here based on the params.json file, the output image dimension will be calculated.
-        if self.params["copy_original_bands"] == "true":
+        if self.params.__dict__["copy_original_bands"]:
             out_dims = size_10m[2] + model_output.shape[2]
         else:
             out_dims = model_output.shape[2]
@@ -364,6 +348,22 @@ class Superresolution:
         p_r.update(count=out_dims)
         p_r.update(transform=new_transform)
         return p_r
+
+    def assert_input_params(self):
+        if not self.params.__dict__["clip_to_aoi"]:
+            if self.params.bbox or self.params.contains or self.params.intersects:
+                raise ValueError(
+                    "When clip_to_aoi is set to False, bbox, contains and intersects must be set to null."
+                )
+        else:
+            if (
+                self.params.bbox is None
+                and self.params.contains is None
+                and self.params.intersects is None
+            ):
+                raise ValueError(
+                    "When clip_to_aoi set to True, you MUST define one of bbox, contains or intersect."
+                )
 
     @staticmethod
     def run():
