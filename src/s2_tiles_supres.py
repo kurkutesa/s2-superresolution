@@ -324,19 +324,15 @@ class Superresolution:
             f_p.write(json.dumps(output_jsonfile, indent=2))
 
     # pylint: disable-msg=too-many-arguments
-    def update(
-        self, data, size_10m: Tuple, model_output: np.ndarray, xmi: int, ymi: int
-    ):
+    @staticmethod
+    def update(data, size_10m: Tuple, model_output: np.ndarray, xmi: int, ymi: int):
         """
         This method creates the proper georeferencing for the output image.
         :param data: The raster file for 10m resolution.
 
         """
         # Here based on the params.json file, the output image dimension will be calculated.
-        if self.params.__dict__["copy_original_bands"]:
-            out_dims = size_10m[2] + model_output.shape[2]
-        else:
-            out_dims = model_output.shape[2]
+        out_dims = model_output.shape[2]
 
         with rasterio.open(data) as d_s:
             p_r = d_s.profile
