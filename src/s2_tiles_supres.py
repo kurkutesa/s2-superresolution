@@ -10,6 +10,7 @@ import subprocess
 from typing import List, Tuple
 from pathlib import Path
 import glob
+import warnings
 
 import numpy as np
 from geojson import FeatureCollection
@@ -26,6 +27,7 @@ from helper import (
     ensure_data_directories_exist,
 )
 
+warnings.filterwarnings(action="ignore", category=FutureWarning)
 LOGGER = get_logger(__name__)
 
 # This code is adapted from this repository

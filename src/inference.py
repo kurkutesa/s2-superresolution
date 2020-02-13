@@ -15,6 +15,19 @@ LOGGER = get_logger(__name__)
 
 class SuperresolutionProcess(Superresolution):
     # pylint: disable=too-many-locals
+    @staticmethod
+    def check_size(dims):
+        xmin, ymin, xmax, ymax = dims
+        if xmax < xmin or ymax < ymin:
+            LOGGER.error("Invalid region of interest / UTM Zone combination")
+            sys.exit(1)
+
+        if (xmax - xmin) < 192 or (ymax - ymin) < 192:
+            LOGGER.error(
+                "AOI too small. Try again with a larger AOI (minimum pixel width or heigh of 192)"
+            )
+            sys.exit(1)
+
     def process(self, path_to_input_img, path_to_output_img):
         data_list = self.get_data(path_to_input_img)
 
@@ -27,7 +40,7 @@ class SuperresolutionProcess(Superresolution):
                 else:
                     # Get the pixel bounds of the full scene
                     xmin, ymin, xmax, ymax, interest_area = self.get_max_min(
-                        0, 0, 20000, 2000, dsdesc
+                        0, 0, 20000, 20000, dsdesc
                     )
                 LOGGER.info("Selected pixel region:")
                 LOGGER.info("xmin = %s", xmin)
@@ -35,9 +48,7 @@ class SuperresolutionProcess(Superresolution):
                 LOGGER.info("xmax = %s", xmax)
                 LOGGER.info("ymax = %s", ymax)
                 LOGGER.info("The area of selected region = %s", interest_area)
-                if xmax < xmin or ymax < ymin:
-                    LOGGER.info("Invalid region of interest / UTM Zone combination")
-                    sys.exit(0)
+            self.check_size(dims=(xmin, ymin, xmax, ymax))
 
         for dsdesc in data_list:
             if "10m" in dsdesc:
