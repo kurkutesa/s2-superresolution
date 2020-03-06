@@ -1,5 +1,5 @@
 {
-  "_up42_specification_version": 1,
+  "_up42_specification_version": 2,
   "name": "superresolution",
   "type": "processing",
   "tags": [
@@ -36,9 +36,27 @@
     "type": "gpu_nvidia_tesla_k80"
   },
   "input_capabilities": {
-    "up42.data.scene.sentinel2_l1c": {}
+      "raster": {
+      "up42_standard": {
+        "format": "SAFE",
+        "sensor": "Sentinel2",
+        "dtype": "uint16",
+        "resolution": 10,
+        "bands": ["coastal", "blue", "green", "red", "rededge", "rededge2", "rededge3", "nir", "nir2", "watervapour", "swir", "swir2", "swir3"],
+        "processing_level": "l1"
+      }
+    }
   },
   "output_capabilities": {
-    "up42.data.aoiclipped": {}
+    "raster": {
+      "up42_standard": {
+        "format": "GTiff",
+        "sensor": ">",
+        "dtype": ">",
+        "resolution": ">",
+        "bands": ">",
+        "processing_level": ">"
+      }
+    }
   }
 }
