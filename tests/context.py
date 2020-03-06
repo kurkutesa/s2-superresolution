@@ -17,7 +17,6 @@ from helper import (
     load_params,
     load_metadata,
     ensure_data_directories_exist,
-    SENTINEL2_L1C,
 )
 
 from tests.synthetic_image import SyntheticImage

@@ -21,7 +21,7 @@ def assert_e2e():
     OUTPUT = (
         TEST_DIR
         / "output"
-        / Path(FEATURE_COLLECTION.features[0].properties["up42.data.aoiclipped"])
+        / Path(FEATURE_COLLECTION.features[0].properties["up42.data_path"])
     )
 
     print(OUTPUT)

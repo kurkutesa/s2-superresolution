@@ -10,7 +10,6 @@ from geojson import Feature, FeatureCollection
 import rasterio
 
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-SENTINEL2_L1C = "up42.data.scene.sentinel2_l1c"
 
 
 def get_logger(name, level=logging.DEBUG):

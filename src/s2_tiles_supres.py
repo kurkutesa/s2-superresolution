@@ -23,7 +23,6 @@ from helper import (
     get_logger,
     load_metadata,
     load_params,
-    SENTINEL2_L1C,
     ensure_data_directories_exist,
 )
 
@@ -72,13 +71,13 @@ class Superresolution:
         input_metadata = load_metadata()
         feature_list = []
         for feature in input_metadata.features:
-            path_to_input_img = feature["properties"][SENTINEL2_L1C]
+            path_to_input_img = feature["properties"]["up42.data_path"]
             path_to_output_img = Path(path_to_input_img).stem + "_superresolution.tif"
             out_feature = feature.copy()
             if self.params.__dict__["clip_to_aoi"]:
                 out_feature["geometry"] = self.params.geometry()
                 out_feature["bbox"] = self.params.bounds()
-            out_feature["properties"]["up42.data.aoiclipped"] = path_to_output_img
+            out_feature["properties"]["up42.data_path"] = path_to_output_img
             feature_list.append(out_feature)
         out_fc = FeatureCollection(feature_list)
 
@@ -308,7 +307,7 @@ class Superresolution:
         output_jsonfile = self.get_final_json()
 
         for feature in input_fc:
-            path_to_input_img = feature["properties"][SENTINEL2_L1C]
+            path_to_input_img = feature["properties"]["up42.data_path"]
             path_to_output_img = Path(path_to_input_img).stem + "_superresolution.tif"
 
             subprocess.run(
