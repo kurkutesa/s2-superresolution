@@ -19,4 +19,4 @@ from helper import (
     ensure_data_directories_exist,
 )
 
-from tests.synthetic_image import SyntheticImage
+from synthetic_image import SyntheticImage
