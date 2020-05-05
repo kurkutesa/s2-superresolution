@@ -5,8 +5,10 @@ from pathlib import Path
 import tempfile
 
 import rasterio
+from rasterio.transform import from_origin
+from blockutils.syntheticimage import SyntheticImage
 
-from context import Superresolution, SyntheticImage
+from context import Superresolution
 
 
 def test_get_max_min():
@@ -28,8 +30,10 @@ def test_get_max_min():
         "B2, central wavelength 490 nm",
         "B8, central wavelength 842 nm",
     ]
+    transform = from_origin(1470996, 6914001, 10.0, 10.0)
+
     test_img, _ = SyntheticImage(40, 40, 4, "uint16", test_dir, 32640).create(
-        pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
+        seed=45, transform=transform, band_desc=valid_desc
     )
     # dsr = rasterio.open(test_img)
     dsr_xmin, dsr_ymin, dsr_xmax, dsr_ymax, dsr_area = Superresolution.get_max_min(
@@ -58,8 +62,10 @@ def test_to_xy():
         "B2, central wavelength 490 nm",
         "B8, central wavelength 842 nm",
     ]
+    transform = from_origin(1470996, 6914001, 10.0, 10.0)
+
     test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir, 32640).create(
-        pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
+        seed=45, transform=transform, band_desc=valid_desc
     )
     # dsr = rasterio.open(test_img)
     dsr_x, dsr_y = s_2.to_xy(lon=1, lat=40, data=test_img)
@@ -80,9 +86,12 @@ def test_get_utm():
         "B2, central wavelength 490 nm",
         "B8, central wavelength 842 nm",
     ]
-    test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir, 32640).create(
-        pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
+    transform = from_origin(1470996, 6914001, 10.0, 10.0)
+
+    test_img, _ = SyntheticImage(40, 40, 4, "uint16", test_dir, 32640).create(
+        seed=45, transform=transform, band_desc=valid_desc
     )
+
     # dsr = rasterio.open(test_img)
     dsr_utm = Superresolution.get_utm(test_img)
 
@@ -111,9 +120,12 @@ def test_area_of_interest():
         "B2, central wavelength 490 nm",
         "B8, central wavelength 842 nm",
     ]
+    transform = from_origin(1470996, 6914001, 10.0, 10.0)
+
     test_img, _ = SyntheticImage(40, 40, 4, "uint16", test_dir, 32640).create(
-        pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
+        seed=45, transform=transform, band_desc=valid_desc
     )
+
     # dsr = rasterio.open(test_img)
     dsr_xmin, dsr_ymin, dsr_xmax, dsr_ymax, dsr_area = s_2.area_of_interest(test_img)
 
@@ -137,9 +149,12 @@ def test_validate_description():
         "B2, central wavelength 490 nm",
         "B8, central wavelength 842 nm",
     ]
+    transform = from_origin(1470996, 6914001, 10.0, 10.0)
+
     test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir).create(
-        pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
+        seed=45, transform=transform, band_desc=valid_desc
     )
+
     dsr = rasterio.open(test_img)
     valid_desc = []
     print(dsr.count)
@@ -162,9 +177,12 @@ def test_get_band_short_name():
         "B2, central wavelength 490 nm",
         "B8, central wavelength 842 nm",
     ]
+    transform = from_origin(1470996, 6914001, 10.0, 10.0)
+
     test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir).create(
-        pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
+        seed=45, transform=transform, band_desc=valid_desc
     )
+
     dsr = rasterio.open(test_img)
     short_desc = []
 
@@ -191,10 +209,12 @@ def test_validate():
         "B2, central wavelength 490 nm",
         "B8, central wavelength 842 nm",
     ]
+
+    transform = from_origin(1470996, 6914001, 10.0, 10.0)
+
     test_img_10, _ = SyntheticImage(20, 18, 4, "uint16", test_dir).create(
-        pix_width=10, pix_height=10, valid_desc=valid_desc_10, seed=45
+        seed=45, transform=transform, band_desc=valid_desc_10
     )
-    # ds10r = rasterio.open(test_img_10)
 
     validated_10m_indices_exm = [0, 1, 2, 3]
     validated_10m_bands_exm = ["B2", "B3", "B4", "B8"]
@@ -216,10 +236,26 @@ def test_data_final():
         "B8, central wavelength 842 nm",
     ]
     valid_indices = [0, 1, 2, 3]
+
+    transform = from_origin(1470996, 6914001, 10.0, 10.0)
+
     test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir).create(
-        pix_width=10, pix_height=10, valid_desc=valid_desc, seed=45
+        seed=45, transform=transform, band_desc=valid_desc
     )
-    # dsr = rasterio.open(test_img)
 
     d_final = Superresolution.data_final(test_img, valid_indices, 0, 0, 5, 5, 1)
     assert d_final.shape == (6, 6, 4)
+
+
+def test_from_dict():
+    """
+    Checks if class method from_dict of ProcessingBlock works
+    """
+
+    params = {
+        "bbox": [12.211, 52.291, 12.513, 52.521],
+        "clip_to_aoi": True,
+        "copy_original_bands": False,
+    }
+    supres = Superresolution.from_dict(params)
+    assert isinstance(supres, Superresolution)

@@ -18,13 +18,11 @@ import rasterio
 from rasterio.windows import Window
 from rasterio import Affine as A
 import pyproj as proj
-from stac import STACQuery
-from helper import (
-    get_logger,
-    load_metadata,
-    load_params,
-    ensure_data_directories_exist,
-)
+from blockutils.blocks import ProcessingBlock
+from blockutils.logging import get_logger
+from blockutils.common import load_metadata
+from blockutils.stac import STACQuery
+
 
 warnings.filterwarnings(action="ignore", category=FutureWarning)
 LOGGER = get_logger(__name__)
@@ -34,7 +32,7 @@ LOGGER = get_logger(__name__)
 # license.
 
 
-class Superresolution:
+class Superresolution(ProcessingBlock):
     """
     This class implements a CNN model to obtain a high resolution (10m)
     bands for 20m and 60m resolution.
@@ -62,6 +60,15 @@ class Superresolution:
         self.output_dir = output_dir
         self.input_dir = input_dir
         self.data_folder = data_folder
+
+    @classmethod
+    def from_dict(cls, kwargs):
+        """
+        Instantiate a class with a dictionary of parameters
+        Unlike the base class, Superresolution wants all parameters in one dict
+        and not unrolled.
+        """
+        return cls(kwargs)
 
     # pylint: disable-msg=too-many-locals
     def get_final_json(self) -> FeatureCollection:
@@ -287,9 +294,7 @@ class Superresolution:
                 )[:, :, term]
         return d_final
 
-    # pylint: disable-msg=too-many-locals
-    # pylint: disable-msg=too-many-statements
-    def run_model(self):
+    def process(self, input_fc: FeatureCollection) -> FeatureCollection:
         """
         This method takes the raster data at 10,
         20, and 60 m resolutions and by applying
@@ -297,16 +302,12 @@ class Superresolution:
         for the the convolutional neural network.
         It returns 10 m resolution for all
         the bands in 20 and 60 m resolutions.
-        :param d_1: Raster data at 10m resolution.
-        :param d_2: Raster data at 20m resolution.
-        :param d_6: Raster data at 60m resolution.
-        :param condition: A flag to make sure only one image will be processed.
+        :param input_fc: geojson FeatureCollection of all input images
         """
-        input_fc = load_metadata().features
         self.assert_input_params()
         output_jsonfile = self.get_final_json()
 
-        for feature in input_fc:
+        for feature in input_fc.features:
             path_to_input_img = feature["properties"]["up42.data_path"]
             path_to_output_img = Path(path_to_input_img).stem + "_superresolution.tif"
 
@@ -318,6 +319,7 @@ class Superresolution:
             )
 
         self.save_output_json(output_jsonfile, self.output_dir)
+        return output_jsonfile
 
     @staticmethod
     def save_output_json(output_jsonfile, output_dir):
@@ -361,12 +363,3 @@ class Superresolution:
                 raise ValueError(
                     "When clip_to_aoi set to True, you MUST define one of bbox, contains or intersect."
                 )
-
-    @staticmethod
-    def run():
-        """
-        This method is the main entry point for this processing block
-        """
-        ensure_data_directories_exist()
-        params = load_params()  # type: dict
-        Superresolution(params).run_model()

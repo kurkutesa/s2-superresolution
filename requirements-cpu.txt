@@ -1,5 +1,5 @@
 up42-blockutils
-tensorflow-gpu==1.15
+tensorflow==1.15
 keras
 numpy
 rasterio

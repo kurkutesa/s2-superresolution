@@ -6,10 +6,10 @@ import gc
 import numpy as np
 import keras.backend as K
 import tensorflow as tf
+from blockutils.logging import get_logger
 
 from dsen2net import s2model
 from patches import get_test_patches, get_test_patches60, recompose_images
-from helper import get_logger
 
 
 SCALE = 2000

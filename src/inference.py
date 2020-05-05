@@ -3,14 +3,37 @@ import os
 import gc
 
 import numpy as np
+import rasterio
+
+from blockutils.logging import get_logger
+from blockutils.common import load_params
 
 from s2_tiles_supres import Superresolution
 from supres import dsen2_20, dsen2_60
 
-
-from helper import get_logger, save_result, load_params
-
 LOGGER = get_logger(__name__)
+
+
+# pylint: disable-msg=too-many-arguments
+def save_result(
+    model_output, output_bands, valid_desc, output_profile, image_name,
+):
+    """
+    This method saves the feature collection meta data and the
+    image with high resolution for desired bands to the provided location.
+    :param model_output: The high resolution image.
+    :param output_bands: The associated bands for the output image.
+    :param valid_desc: The valid description of the existing bands.
+    :param output_profile: The georeferencing for the output image.
+    :param output_features: The meta data for the output image.
+    :param image_name: The name of the output image.
+
+    """
+
+    with rasterio.open(image_name, "w", **output_profile) as d_s:
+        for b_i, b_n in enumerate(output_bands):
+            d_s.write(model_output[:, :, b_i], indexes=b_i + 1)
+            d_s.set_band_description(b_i + 1, "SR " + valid_desc[b_n])
 
 
 class SuperresolutionProcess(Superresolution):
@@ -28,7 +51,7 @@ class SuperresolutionProcess(Superresolution):
             )
             sys.exit(1)
 
-    def process(self, path_to_input_img, path_to_output_img):
+    def start(self, path_to_input_img, path_to_output_img):
         data_list = self.get_data(path_to_input_img)
 
         for dsdesc in data_list:
@@ -128,4 +151,4 @@ class SuperresolutionProcess(Superresolution):
 
 if __name__ == "__main__":
     PARAMS = load_params()
-    SuperresolutionProcess(PARAMS).process(sys.argv[1], sys.argv[2])
+    SuperresolutionProcess(PARAMS).start(sys.argv[1], sys.argv[2])

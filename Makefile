@@ -10,6 +10,10 @@ REGISTRY := registry.up42.com
 install:
 	pip install -r requirements.txt
 
+install-cpu:
+	pip install -r requirements-cpu.txt
+
+
 test:
 	bash test.sh
 
