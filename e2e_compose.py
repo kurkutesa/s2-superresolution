@@ -117,7 +117,7 @@ if __name__ == "__main__":
         else:
             break
 
-    print("Exited with code %d" % DOCKER_POPEN.poll())
+    print("Exited with code %r" % DOCKER_POPEN.poll())
     assert DOCKER_POPEN.poll() == 0
 
     assert_e2e()
