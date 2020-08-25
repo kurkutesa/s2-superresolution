@@ -1,5 +1,5 @@
 up42-blockutils
-tensorflow-gpu==1.15.2
+tensorflow>=2.3.*
 keras
 numpy
 rasterio
@@ -16,5 +16,3 @@ pytest-mypy
 mock
 black
 coverage-badge
-
-

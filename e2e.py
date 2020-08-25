@@ -8,6 +8,8 @@ import os
 import geojson
 import rasterio
 
+# WARNING
+# THIS E2E TEST WILL ONLY WORK IN GPU ENABLED MACHINES
 # pylint: disable=invalid-name
 def assert_e2e():
     # Print out bbox of one tile

@@ -64,11 +64,6 @@ Install the necessary Python libraries via:
 make install
 ```
 
-Or if you are running on an environmeant that does not support GPUs
-```bash
-make install-cpu
-```
-
 ## Testing the block locally
 
 Before uploading the block to the UP42 platform, we encourage you to run the following local tests and validations to
