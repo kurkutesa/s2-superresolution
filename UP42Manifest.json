@@ -43,7 +43,7 @@
         "dtype": "uint16",
         "resolution": 10,
         "bands": ["coastal", "blue", "green", "red", "rededge", "rededge2", "rededge3", "nir", "nir2", "watervapour", "swir", "swir2", "swir3"],
-        "processing_level": "l1"
+        "processing_level": {"or":  ["l1", "l2"]}
       }
     }
   },

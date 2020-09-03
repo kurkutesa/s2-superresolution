@@ -9,6 +9,7 @@ pyproj
 geojson
 shapely
 ciso8601
+tqdm
 pytest
 pytest-pylint
 pytest-cov

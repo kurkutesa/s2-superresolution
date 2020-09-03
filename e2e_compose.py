@@ -120,4 +120,4 @@ if __name__ == "__main__":
     print("Exited with code %r" % DOCKER_POPEN.poll())
     assert DOCKER_POPEN.poll() == 0
 
-    assert_e2e()
+    assert_e2e(TEST_DIR)

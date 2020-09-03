@@ -90,7 +90,7 @@ class Superresolution(ProcessingBlock):
 
         return out_fc
 
-    def get_data(self, image_id) -> list:
+    def get_data(self, image_id) -> Tuple[List, str]:
         """
         This method returns the raster data set of original image for
         all the available resolutions.
@@ -102,10 +102,13 @@ class Superresolution(ProcessingBlock):
         ):
             data_path = file
 
+        # The following line will define whether image is L1C or L2A
+        # For instance image_level can be "MSIL1C" or "MSIL2A"
+        image_level = Path(data_path).stem.split("_")[1]
         raster_data = rasterio.open(data_path)
         datasets = raster_data.subdatasets
 
-        return datasets
+        return datasets, image_level
 
     @staticmethod
     def get_max_min(x_1: int, y_1: int, x_2: int, y_2: int, data) -> Tuple:
@@ -264,7 +267,7 @@ class Superresolution(ProcessingBlock):
     @staticmethod
     # pylint: disable-msg=too-many-arguments
     def data_final(
-        data, term: List, x_mi: int, y_mi: int, x_ma: int, y_ma: int, n_res
+        data, term: List, x_mi: int, y_mi: int, x_ma: int, y_ma: int, n_res, scale
     ) -> np.ndarray:
         """
         This method takes the raster file at a specific
@@ -283,10 +286,10 @@ class Superresolution(ProcessingBlock):
                 d_final = np.rollaxis(
                     d_s.read(
                         window=Window(
-                            col_off=x_mi,
-                            row_off=y_mi,
-                            width=x_ma - x_mi + n_res,
-                            height=y_ma - y_mi + n_res,
+                            col_off=x_mi // scale,
+                            row_off=y_mi // scale,
+                            width=(x_ma - x_mi + n_res) // scale,
+                            height=(y_ma - y_mi + n_res) // scale,
                         )
                     ),
                     0,
@@ -307,7 +310,9 @@ class Superresolution(ProcessingBlock):
         self.assert_input_params()
         output_jsonfile = self.get_final_json()
 
+        LOGGER.info("Started process...")
         for feature in input_fc.features:
+            LOGGER.info(f"Processing feature {feature}")
             path_to_input_img = feature["properties"]["up42.data_path"]
             path_to_output_img = Path(path_to_input_img).stem + "_superresolution.tif"
 

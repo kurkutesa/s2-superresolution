@@ -10,4 +10,5 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../s
 
 # pylint: disable=unused-import,wrong-import-position
 from s2_tiles_supres import Superresolution
+from supres import dsen2_60, dsen2_20, BatchGenerator
 import patches
