@@ -51,7 +51,7 @@ def test_dsen2_60(d10, d20, d60, level1):
     assert res.shape[0:1] == d10.shape[0:1]
 
 
-# @DISABLE_NO_GPU
+@DISABLE_NO_GPU
 def test_batch_generator(d10, d20):
     p10, p20 = patches.get_test_patches(d10, d20, 128, 8)
     a = BatchGenerator([p10, p20], batch_size=8)
