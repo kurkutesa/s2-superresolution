@@ -17,6 +17,9 @@ import argparse
 import subprocess
 
 from e2e import assert_e2e
+from blockutils.logging import get_logger
+
+logger = get_logger(__name__)
 
 
 def parse_args():
@@ -38,7 +41,10 @@ def parse_args():
         help="Path to YAML file defining compose.",
     )
     parser.add_argument(
-        "-gpu", action="save_true", default=False, help="Use docker run gpu call.",
+        "-gpu",
+        action="save_true",
+        default=False,
+        help="Use docker run gpu call.",
     )
     parser.add_argument(
         "-l",
@@ -52,8 +58,8 @@ def parse_args():
     _is_data_default = _args.data is None
     if _is_data_default:
         _args.data = "gs://floss-blocks-e2e-testing/e2e_s2_superresolution/*"
-        print("No specified data paramater.")
-        print("Using default=%s." % _args.data)
+        logger.info("No specified data paramater.")
+        logger.info(f"Using default={_args.data}.")
 
     return _args, _is_data_default
 
@@ -94,9 +100,8 @@ if __name__ == "__main__":
             "gsutil -m cp -r %s %s/" % (DATA, INPUT_DIR), shell=True, check=True
         )
 
-    DOCKER_CMD = "docker-compose -f %s --compatibility up --build >> %s" % (
-        str(COMPOSE),
-        str(LOG),
+    DOCKER_CMD = (
+        f"docker-compose -f {str(COMPOSE)} --compatibility up --build >> {str(LOG)}"
     )
     if DATA.gpu:
         DOCKER_CMD = (
@@ -107,7 +112,7 @@ if __name__ == "__main__":
         >> %s"
             % (str(LOG),)
         )
-    LOGGER_CMD = "docker stats --no-stream >> %s" % str(LOG)
+    LOGGER_CMD = f"docker stats --no-stream >> {str(LOG)}"
 
     DOCKER_POPEN = subprocess.Popen(DOCKER_CMD, shell=True)
     while True:

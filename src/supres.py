@@ -98,7 +98,7 @@ def _predict(test, model_filename):
     with STRATEGY.scope():
         model = keras.models.load_model(model_filename)
     LOGGER.info("Symbolic Model Created.")
-    LOGGER.info("Predicting using file: %s", model_filename)
+    LOGGER.info(f"Predicting using file: {model_filename}")
     first = True
     for a_slice in tqdm(BatchGenerator(test)):
         if first:

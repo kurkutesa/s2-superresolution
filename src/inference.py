@@ -16,18 +16,23 @@ LOGGER = get_logger(__name__)
 
 # pylint: disable-msg=too-many-arguments
 def save_result(
-    model_output, output_bands, valid_desc, output_profile, image_name,
+    model_output,
+    output_bands,
+    valid_desc,
+    output_profile,
+    image_name,
 ):
     """
     This method saves the feature collection meta data and the
     image with high resolution for desired bands to the provided location.
-    :param model_output: The high resolution image.
-    :param output_bands: The associated bands for the output image.
-    :param valid_desc: The valid description of the existing bands.
-    :param output_profile: The georeferencing for the output image.
-    :param output_features: The meta data for the output image.
-    :param image_name: The name of the output image.
 
+    Args:
+        model_output: The high resolution image.
+        output_bands: The associated bands for the output image.
+        valid_desc: The valid description of the existing bands.
+        output_profile: The georeferencing for the output image.
+        output_features: The meta data for the output image.
+        image_name: The name of the output image.
     """
 
     with rasterio.open(image_name, "w", **output_profile) as d_s:
@@ -66,8 +71,8 @@ class SuperresolutionProcess(Superresolution):
                         0, 0, 20000, 20000, dsdesc
                     )
                 LOGGER.info("Selected pixel region:")
-                LOGGER.info("xmin = %s", xmin)
-                LOGGER.info("ymin = %s", ymin)
+                LOGGER.info("xmin = {xmin}")
+                LOGGER.info("ymin = {ymin}")
                 LOGGER.info("xmax = %s", xmax)
                 LOGGER.info("ymax = %s", ymax)
                 LOGGER.info("The area of selected region = %s", interest_area)

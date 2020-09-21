@@ -8,6 +8,10 @@ import os
 import geojson
 import rasterio
 
+from blockutils.logging import get_logger
+
+logger = get_logger(__name__)
+
 # WARNING
 # THIS E2E TEST WILL ONLY WORK IN GPU ENABLED MACHINES
 def assert_e2e(test_dir):
@@ -17,7 +21,7 @@ def assert_e2e(test_dir):
     with open(str(geojson_path)) as f:
         feature_collection = geojson.load(f)
 
-    print(feature_collection.features[0].bbox)
+    logger.info(feature_collection.features[0].bbox)
 
     output = (
         test_dir
@@ -25,7 +29,7 @@ def assert_e2e(test_dir):
         / Path(feature_collection.features[0].properties["up42.data_path"])
     )
 
-    print(output)
+    logger.info(output)
 
     assert output.exists()
 

@@ -46,9 +46,10 @@ class Superresolution(ProcessingBlock):
         data_folder: str = "*/MTD*.xml",
     ):
         """
-        :param output_dir: The directory for the output image.
-        :param input_dir: The directory of the original image.
-        :param data_folder: The original image file.
+        Args:
+            output_dir: The directory for the output image.
+            input_dir: The directory of the original image.
+            data_folder: The original image file.
         """
 
         params = STACQuery.from_dict(params, lambda x: True)
@@ -64,9 +65,8 @@ class Superresolution(ProcessingBlock):
     @classmethod
     def from_dict(cls, kwargs):
         """
-        Instantiate a class with a dictionary of parameters
-        Unlike the base class, Superresolution wants all parameters in one dict
-        and not unrolled.
+        Instantiate a class with a dictionary of parameters. Unlike the base class,
+        Superresolution wants all parameters in one dict and not unrolled.
         """
         return cls(kwargs)
 
@@ -114,11 +114,12 @@ class Superresolution(ProcessingBlock):
     def get_max_min(x_1: int, y_1: int, x_2: int, y_2: int, data) -> Tuple:
         """
         This method gets pixels' location for the region of interest on the 10m bands
-        and returns the min/max in each direction and to nearby 60m pixel boundaries and the area
-        associated to the region of interest.
-        **Example**
-        >>> get_max_min(0,0,400,400)
-        (0, 0, 395, 395, 156816)
+        and returns the min/max in each direction and to nearby 60m pixel boundaries
+        and the area associated to the region of interest.
+
+        Examples:
+            >>> get_max_min(0,0,400,400)
+            (0, 0, 395, 395, 156816)
 
         """
         with rasterio.open(data) as d_s:
@@ -142,9 +143,13 @@ class Superresolution(ProcessingBlock):
         """
         This method gets the longitude and the latitude of a given point and projects it
         into pixel location in the new coordinate system.
-        :param lon: The longitude of a chosen point
-        :param lat: The longitude of a chosen point
-        :return: The pixel location in the coordinate system of the input image
+
+        Args:
+            lon: The longitude of a chosen point
+            lat: The longitude of a chosen point
+
+        Returns:
+            The pixel location in the coordinate system of the input image
         """
         # get the image's coordinate system.
         with rasterio.open(data) as d_s:
@@ -171,8 +176,12 @@ class Superresolution(ProcessingBlock):
     def get_utm(data) -> str:
         """
         This method returns the utm of the input image.
-        :param data: The raster file for a specific resolution.
-        :return: UTM of the selected raster file.
+
+        Args:
+            data: The raster file for a specific resolution.
+
+        Returns:
+            UTM of the selected raster file.
         """
         with rasterio.open(data) as d_s:
             data_crs = d_s.crs.to_dict()
@@ -195,13 +204,15 @@ class Superresolution(ProcessingBlock):
     def validate_description(description: str) -> str:
         """
         This method rewrites the description of each band in the given data set.
-        :param description: The actual description of a chosen band.
 
-        **Example**
-        >>> ds10.descriptions[0]
-        'B4, central wavelength 665 nm'
-        >>> validate_description(ds10.descriptions[0])
-        'B4 (665 nm)'
+        Args:
+            description: The actual description of a chosen band.
+
+        Examples:
+            >>> ds10.descriptions[0]
+            'B4, central wavelength 665 nm'
+            >>> validate_description(ds10.descriptions[0])
+            'B4 (665 nm)'
         """
         m_re = re.match(r"(.*?), central wavelength (\d+) nm", description)
         if m_re:
@@ -213,14 +224,15 @@ class Superresolution(ProcessingBlock):
         """
         This method returns only the name of the bands at a chosen resolution.
 
-        :param description: This is the output of the validate_description method.
+        Args:
+            description: This is the output of the validate_description method.
 
-        **Example**
-        >>> desc = validate_description(ds10.descriptions[0])
-        >>> desc
-        'B4 (665 nm)'
-        >>> get_band_short_name(desc)
-        'B4'
+        Examples:
+            >>> desc = validate_description(ds10.descriptions[0])
+            >>> desc
+            'B4 (665 nm)'
+            >>> get_band_short_name(desc)
+            'B4'
         """
         if "," in description:
             return description[: description.find(",")]
@@ -230,23 +242,25 @@ class Superresolution(ProcessingBlock):
 
     def validate(self, data) -> Tuple:
         """
-        This method takes the short name of the bands for each
-        separate resolution and returns three lists. The validated_
-        bands and validated_indices contain the name of the bands and
-        the indices related to them respectively.
+        This method takes the short name of the bands for each separate resolution and
+        returns three lists. The validated_bands and validated_indices contain the
+        name of the bands and the indices related to them respectively.
         The validated_descriptions is a list of descriptions for each band
         obtained from the validate_description method.
-        :param data: The raster file for a specific resolution.
-        **Example**
-        >>> validated_10m_bands, validated_10m_indices, \
-        >>> dic_10m = validate(ds10)
-        >>> validated_10m_bands
-        ['B4', 'B3', 'B2', 'B8']
-        >>> validated_10m_indices
-        [0, 1, 2, 3]
-        >>> dic_10m
-        defaultdict(<class 'str'>, {'B4': 'B4 (665 nm)',
-         'B3': 'B3 (560 nm)', 'B2': 'B2 (490 nm)', 'B8': 'B8 (842 nm)'})
+
+        Args:
+            data: The raster file for a specific resolution.
+
+        Examples:
+            >>> validated_10m_bands, validated_10m_indices, \
+            >>> dic_10m = validate(ds10)
+            >>> validated_10m_bands
+            ['B4', 'B3', 'B2', 'B8']
+            >>> validated_10m_indices
+            [0, 1, 2, 3]
+            >>> dic_10m
+            defaultdict(<class 'str'>, {'B4': 'B4 (665 nm)',
+             'B3': 'B3 (560 nm)', 'B2': 'B2 (490 nm)', 'B8': 'B8 (842 nm)'})
         """
         input_select_bands = "B1,B2,B3,B4,B5,B6,B7,B8,B8A,B9,B11,B12"  # type: str
         select_bands = re.split(",", input_select_bands)  # type: List[str]
@@ -299,13 +313,12 @@ class Superresolution(ProcessingBlock):
 
     def process(self, input_fc: FeatureCollection) -> FeatureCollection:
         """
-        This method takes the raster data at 10,
-        20, and 60 m resolutions and by applying
-        data_final method creates the input data
-        for the the convolutional neural network.
-        It returns 10 m resolution for all
-        the bands in 20 and 60 m resolutions.
-        :param input_fc: geojson FeatureCollection of all input images
+        This method takes the raster data at 10, 20, and 60 m resolutions and by applying
+        data_final method creates the input data for the the convolutional neural network.
+        It returns 10 m resolution for all the bands in 20 and 60 m resolutions.
+
+        Args:
+            input_fc: geojson FeatureCollection of all input images
         """
         self.assert_input_params()
         output_jsonfile = self.get_final_json()
@@ -336,8 +349,10 @@ class Superresolution(ProcessingBlock):
     def update(data, size_10m: Tuple, model_output: np.ndarray, xmi: int, ymi: int):
         """
         This method creates the proper georeferencing for the output image.
-        :param data: The raster file for 10m resolution.
 
+        Args:
+
+            data: The raster file for 10m resolution.
         """
         # Here based on the params.json file, the output image dimension will be calculated.
         out_dims = model_output.shape[2]

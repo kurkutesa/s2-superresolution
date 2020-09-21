@@ -6,9 +6,13 @@ import tempfile
 
 import rasterio
 from rasterio.transform import from_origin
+
 from blockutils.syntheticimage import SyntheticImage
+from blockutils.logging import get_logger
 
 from context import Superresolution
+
+logger = get_logger(__name__)
 
 
 def test_get_max_min():
@@ -157,7 +161,7 @@ def test_validate_description():
 
     dsr = rasterio.open(test_img)
     valid_desc = []
-    print(dsr.count)
+    logger.info(dsr.count)
     for i in range(dsr.count):
         valid_desc.append(Superresolution.validate_description(dsr.descriptions[i]))
 

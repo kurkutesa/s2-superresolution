@@ -86,7 +86,9 @@ def get_test_patches(
 
     # Mirror the data at the borders to have the same dimensions as the input
     dset_10 = np.pad(
-        dset_10, ((border, border), (border, border), (0, 0)), mode="symmetric",
+        dset_10,
+        ((border, border), (border, border), (0, 0)),
+        mode="symmetric",
     )
     dset_20 = np.pad(
         dset_20,
@@ -136,7 +138,9 @@ def get_test_patches60(
 
     # Mirror the data at the borders to have the same dimensions as the input
     dset_10 = np.pad(
-        dset_10, ((border, border), (border, border), (0, 0)), mode="symmetric",
+        dset_10,
+        ((border, border), (border, border), (0, 0)),
+        mode="symmetric",
     )
     dset_20 = np.pad(
         dset_20,
@@ -198,12 +202,15 @@ def crop_array_to_window(
     array: np.ndarray, crop_window: List[int], rollaxis: bool = True
 ) -> np.ndarray:
     """Return a subset of a numpy array. Rollaxis optional from channels last
-    to channels first and vice versa. """
+    to channels first and vice versa."""
     cropped_array = array[
         crop_window[0] : crop_window[2], crop_window[1] : crop_window[3]
     ]
     if rollaxis:
-        return np.rollaxis(cropped_array, 2,)
+        return np.rollaxis(
+            cropped_array,
+            2,
+        )
     else:
         return cropped_array
 
