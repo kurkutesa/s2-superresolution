@@ -16,11 +16,7 @@ LOGGER = get_logger(__name__)
 
 # pylint: disable-msg=too-many-arguments
 def save_result(
-    model_output,
-    output_bands,
-    valid_desc,
-    output_profile,
-    image_name,
+    model_output, output_bands, valid_desc, output_profile, image_name,
 ):
     """
     This method saves the feature collection meta data and the

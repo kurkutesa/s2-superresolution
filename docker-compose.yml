@@ -5,10 +5,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: '4'
           memory: 20G
         reservations:
-          cpus: '0.50'
           memory: 150M
     environment:
       UP42_TASK_PARAMETERS: '{"copy_original_bands": false}'

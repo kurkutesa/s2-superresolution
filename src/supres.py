@@ -16,10 +16,10 @@ LOGGER = get_logger(__name__)
 SCALE = 2000
 MDL_PATH = "./weights/"
 
-L1C_MDL_PATH_20M_AESR = MDL_PATH + "l1c_aesr_20m_s2_038_lr_1e-04.hdf5"
-L1C_MDL_PATH_60M_AESR = MDL_PATH + "l1c_aesr_60m_s2_038_lr_1e-04.hdf5"
-L2A_MDL_PATH_20M_AESR = MDL_PATH + "l2a_aesr_20m_s2_038_lr_1e-04.hdf5"
-L2A_MDL_PATH_60M_AESR = MDL_PATH + "l2a_aesr_60m_s2_038_lr_1e-04.hdf5"
+L1C_MDL_PATH_20M_DSEN2 = MDL_PATH + "l1c_dsen2_20m_s2_038_lr_1e-04.hdf5"
+L1C_MDL_PATH_60M_DSEN2 = MDL_PATH + "l1c_dsen2_60m_s2_038_lr_1e-04.hdf5"
+L2A_MDL_PATH_20M_DSEN2 = MDL_PATH + "l2a_dsen2_20m_s2_038_lr_1e-04.hdf5"
+L2A_MDL_PATH_60M_DSEN2 = MDL_PATH + "l2a_dsen2_60m_s2_038_lr_1e-04.hdf5"
 
 STRATEGY = tf.distribute.MirroredStrategy()
 
@@ -36,9 +36,9 @@ def dsen2_20(d10, d20, image_level):
     p20 /= SCALE
     test = [p10, p20]
     if image_level == "MSIL1C":
-        model_filename = L1C_MDL_PATH_20M_AESR
+        model_filename = L1C_MDL_PATH_20M_DSEN2
     else:
-        model_filename = L2A_MDL_PATH_20M_AESR
+        model_filename = L2A_MDL_PATH_20M_DSEN2
 
     prediction = _predict(test, model_filename)
     images = recompose_images(prediction, border=border, size=d10.shape)
@@ -61,9 +61,9 @@ def dsen2_60(d10, d20, d60, image_level):
 
     test = [p10, p20, p60]
     if image_level == "MSIL1C":
-        model_filename = L1C_MDL_PATH_60M_AESR
+        model_filename = L1C_MDL_PATH_60M_DSEN2
     else:
-        model_filename = L2A_MDL_PATH_60M_AESR
+        model_filename = L2A_MDL_PATH_60M_DSEN2
     prediction = _predict(test, model_filename)
     images = recompose_images(prediction, border=border, size=d10.shape)
     images *= SCALE
