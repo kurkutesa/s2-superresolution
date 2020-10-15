@@ -16,7 +16,11 @@ LOGGER = get_logger(__name__)
 
 # pylint: disable-msg=too-many-arguments
 def save_result(
-    model_output, output_bands, valid_desc, output_profile, image_name,
+    model_output,
+    output_bands,
+    valid_desc,
+    output_profile,
+    image_name,
 ):
     """
     This method saves the feature collection meta data and the
@@ -33,7 +37,7 @@ def save_result(
 
     with rasterio.open(image_name, "w", **output_profile) as d_s:
         for b_i, b_n in enumerate(output_bands):
-            d_s.write(model_output[:, :, b_i], indexes=b_i + 1)
+            d_s.write(model_output[:, :, b_i].astype(np.uint16), indexes=b_i + 1)
             d_s.set_band_description(b_i + 1, "SR " + valid_desc[b_n])
 
 

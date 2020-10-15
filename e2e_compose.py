@@ -41,7 +41,10 @@ def parse_args():
         help="Path to YAML file defining compose.",
     )
     parser.add_argument(
-        "-gpu", action="save_true", default=False, help="Use docker run gpu call.",
+        "-gpu",
+        action="save_true",
+        default=False,
+        help="Use docker run gpu call.",
     )
     parser.add_argument(
         "-l",

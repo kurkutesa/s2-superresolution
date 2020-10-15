@@ -22,6 +22,7 @@ from blockutils.blocks import ProcessingBlock
 from blockutils.logging import get_logger
 from blockutils.common import load_metadata
 from blockutils.stac import STACQuery
+from blockutils.exceptions import UP42Error, SupportedErrors
 
 
 warnings.filterwarnings(action="ignore", category=FutureWarning)
@@ -360,7 +361,7 @@ class Superresolution(ProcessingBlock):
         with rasterio.open(data) as d_s:
             p_r = d_s.profile
         new_transform = p_r["transform"] * A.translation(xmi, ymi)
-        p_r.update(dtype=rasterio.float32)
+        p_r.update(dtype=rasterio.uint16)
         p_r.update(driver="GTiff")
         p_r.update(width=size_10m[1])
         p_r.update(height=size_10m[0])
@@ -371,8 +372,9 @@ class Superresolution(ProcessingBlock):
     def assert_input_params(self):
         if not self.params.__dict__["clip_to_aoi"]:
             if self.params.bbox or self.params.contains or self.params.intersects:
-                raise ValueError(
-                    "When clip_to_aoi is set to False, bbox, contains and intersects must be set to null."
+                raise UP42Error(
+                    SupportedErrors.INPUT_PARAMETERS_ERROR,
+                    "When clip_to_aoi is set to False, bbox, contains and intersects must be set to null.",
                 )
         else:
             if (
@@ -380,6 +382,7 @@ class Superresolution(ProcessingBlock):
                 and self.params.contains is None
                 and self.params.intersects is None
             ):
-                raise ValueError(
-                    "When clip_to_aoi set to True, you MUST define one of bbox, contains or intersect."
+                raise UP42Error(
+                    SupportedErrors.INPUT_PARAMETERS_ERROR,
+                    "When clip_to_aoi set to True, you MUST define one of bbox, contains or intersect.",
                 )
