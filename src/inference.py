@@ -37,7 +37,7 @@ def save_result(
 
     with rasterio.open(image_name, "w", **output_profile) as d_s:
         for b_i, b_n in enumerate(output_bands):
-            d_s.write(model_output[:, :, b_i].astype(np.uint16), indexes=b_i + 1)
+            d_s.write(model_output[:, :, b_i], indexes=b_i + 1)
             d_s.set_band_description(b_i + 1, "SR " + valid_desc[b_n])
 
 
@@ -71,11 +71,11 @@ class SuperresolutionProcess(Superresolution):
                         0, 0, 20000, 20000, dsdesc
                     )
                 LOGGER.info("Selected pixel region:")
-                LOGGER.info("xmin = {xmin}")
-                LOGGER.info("ymin = {ymin}")
-                LOGGER.info("xmax = %s", xmax)
-                LOGGER.info("ymax = %s", ymax)
-                LOGGER.info("The area of selected region = %s", interest_area)
+                LOGGER.info(f"xmin = {xmin}")
+                LOGGER.info(f"ymin = {ymin}")
+                LOGGER.info(f"xmax = {xmax}")
+                LOGGER.info(f"ymax = {ymax}")
+                LOGGER.info(f"The area of selected region = {interest_area}")
             self.check_size(dims=(xmin, ymin, xmax, ymax))
 
         for dsdesc in data_list:
@@ -108,15 +108,19 @@ class SuperresolutionProcess(Superresolution):
 
         if validated_60m_bands and validated_20m_bands and validated_10m_bands:
             LOGGER.info("Super-resolving the 60m data into 10m bands")
-            sr60 = dsen2_60(data10, data20, data60, image_level)
+            sr60_ = dsen2_60(data10, data20, data60, image_level)
+            sr60 = sr60_.astype(np.uint16)
+            del sr60_, data60
             LOGGER.info("Super-resolving the 20m data into 10m bands")
-            sr20 = dsen2_20(data10, data20, image_level)
+            sr20_ = dsen2_20(data10, data20, image_level)
+            sr20 = sr20_.astype(np.uint16)
+            del sr20_
         else:
             LOGGER.info("No super-resolution performed, exiting")
             sys.exit(0)
 
         if self.params.__dict__["copy_original_bands"]:
-            sr_final = np.concatenate((data10, sr20, sr60), axis=2)
+            sr_final = np.concatenate((data10.astype(np.uint16), sr20, sr60), axis=2)
             validated_sr_final_bands = (
                 validated_10m_bands + validated_20m_bands + validated_60m_bands
             )

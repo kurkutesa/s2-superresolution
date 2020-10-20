@@ -1,5 +1,6 @@
 from __future__ import division
 
+import gc
 import tensorflow as tf
 import numpy as np
 from tqdm import tqdm
@@ -41,6 +42,7 @@ def dsen2_20(d10, d20, image_level):
         model_filename = L2A_MDL_PATH_20M_DSEN2
 
     prediction = _predict(test, model_filename)
+    del test, p10, p20
     images = recompose_images(prediction, border=border, size=d10.shape)
     images *= SCALE
     return images
@@ -65,6 +67,7 @@ def dsen2_60(d10, d20, d60, image_level):
     else:
         model_filename = L2A_MDL_PATH_60M_DSEN2
     prediction = _predict(test, model_filename)
+    del test, p10, p20, p60
     images = recompose_images(prediction, border=border, size=d10.shape)
     images *= SCALE
     return images
@@ -109,4 +112,5 @@ def _predict(test, model_filename):
 
     LOGGER.info("Predicted...")
     del model
+    LOGGER.info("This is for releasing memory: %s", gc.collect())
     return prediction
