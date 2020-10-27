@@ -58,7 +58,7 @@ class SuperresolutionProcess(Superresolution):
                 SupportedErrors.INPUT_PARAMETERS_ERROR,
                 "AOI too small. Try again with a larger AOI (minimum pixel width or heigh of 192)",
             )
-            
+
     @catch_exceptions(LOGGER)
     def start(self, path_to_input_img, path_to_output_img):
         data_list, image_level = self.get_data(path_to_input_img)

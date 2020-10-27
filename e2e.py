@@ -4,10 +4,10 @@ is valid.
 """
 from pathlib import Path
 import os
+import subprocess
 
 import geojson
 import rasterio
-import subprocess
 
 from blockutils.logging import get_logger
 
@@ -74,7 +74,7 @@ def setup(testname):
 
     run_cmd = (
         """docker run -v %s:/tmp \
-                 -e 'UP42_TASK_PARAMETERS={"bbox": [12.211, 52.291, 12.513, 52.521], "clip_to_aoi": true, \
+                 -e 'UP42_TASK_PARAMETERS={"bbox": [12.211, 52.291, 12.212, 52.290], "clip_to_aoi": true, \
                  "copy_original_bands": false}' \
                  -it s2-superresolution"""
         % test_dir
@@ -87,7 +87,9 @@ if __name__ == "__main__":
     TESTNAME = "e2e_s2-superresolution"
     RUN_CMD, TEST_DIR = setup(TESTNAME)
 
-    RETURN_CODE = subprocess.run(RUN_CMD, shell=True).returncode
+    RETURN_CODE = subprocess.run(  # pylint: disable=subprocess-run-check
+        RUN_CMD, shell=True
+    ).returncode
     logger.info(f"Out code is {str(RETURN_CODE)}")
     assert RETURN_CODE == 0
 

@@ -336,7 +336,7 @@ class Superresolution(ProcessingBlock):
                     check=True,
                     shell=True,
                 )
-            except subprocess.SubprocessError as e:
+            except subprocess.CalledProcessError as e:
                 raise UP42Error(SupportedErrors(e.returncode))
 
         self.save_output_json(output_jsonfile, self.output_dir)
