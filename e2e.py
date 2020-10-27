@@ -7,6 +7,7 @@ import os
 
 import geojson
 import rasterio
+import subprocess
 
 from blockutils.logging import get_logger
 
@@ -86,6 +87,8 @@ if __name__ == "__main__":
     TESTNAME = "e2e_s2-superresolution"
     RUN_CMD, TEST_DIR = setup(TESTNAME)
 
-    os.system(RUN_CMD)
+    RETURN_CODE = subprocess.run(RUN_CMD, shell=True).returncode
+    logger.info(f"Out code is {str(RETURN_CODE)}")
+    assert RETURN_CODE == 0
 
     assert_e2e(TEST_DIR)

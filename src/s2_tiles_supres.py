@@ -329,13 +329,15 @@ class Superresolution(ProcessingBlock):
             LOGGER.info(f"Processing feature {feature}")
             path_to_input_img = feature["properties"]["up42.data_path"]
             path_to_output_img = Path(path_to_input_img).stem + "_superresolution.tif"
-
-            subprocess.run(
-                "python3 src/inference.py %s %s"
-                % (path_to_input_img, path_to_output_img),
-                check=True,
-                shell=True,
-            )
+            try:
+                subprocess.run(
+                    "python3 src/inference.py %s %s"
+                    % (path_to_input_img, path_to_output_img),
+                    check=True,
+                    shell=True,
+                )
+            except subprocess.SubprocessError as e:
+                raise UP42Error(SupportedErrors(e.returncode))
 
         self.save_output_json(output_jsonfile, self.output_dir)
         return output_jsonfile

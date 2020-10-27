@@ -7,6 +7,7 @@ import rasterio
 
 from blockutils.logging import get_logger
 from blockutils.common import load_params
+from blockutils.exceptions import UP42Error, SupportedErrors, catch_exceptions
 
 from s2_tiles_supres import Superresolution
 from supres import dsen2_20, dsen2_60
@@ -47,15 +48,18 @@ class SuperresolutionProcess(Superresolution):
     def check_size(dims):
         xmin, ymin, xmax, ymax = dims
         if xmax < xmin or ymax < ymin:
-            LOGGER.error("Invalid region of interest / UTM Zone combination")
-            sys.exit(1)
+            raise UP42Error(
+                SupportedErrors.INPUT_PARAMETERS_ERROR,
+                "Invalid region of interest / UTM Zone combination",
+            )
 
         if (xmax - xmin) < 192 or (ymax - ymin) < 192:
-            LOGGER.error(
-                "AOI too small. Try again with a larger AOI (minimum pixel width or heigh of 192)"
+            raise UP42Error(
+                SupportedErrors.INPUT_PARAMETERS_ERROR,
+                "AOI too small. Try again with a larger AOI (minimum pixel width or heigh of 192)",
             )
-            sys.exit(1)
-
+            
+    @catch_exceptions(LOGGER)
     def start(self, path_to_input_img, path_to_output_img):
         data_list, image_level = self.get_data(path_to_input_img)
 
