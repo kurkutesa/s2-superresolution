@@ -9,7 +9,7 @@
     "convolutional neural network"
   ],
   "display_name": "Super-resolution Sentinel-2",
-  "description": "Runs a deep-learning based superresolution algorithm to create a Sentinel-2 image with 10 m resolution.",
+  "description": "Runs a deep-learning based superresolution algorithm to create a Sentinel-2 image with 10 m resolution across all bands.",
   "parameters": {
     "bbox": {
       "type": "array",
