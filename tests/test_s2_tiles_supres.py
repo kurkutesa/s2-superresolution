@@ -7,7 +7,7 @@ import tempfile
 import rasterio
 from rasterio.transform import from_origin
 
-from blockutils.syntheticimage import SyntheticImage
+from fake_geo_images.fakegeoimages import FakeGeoImage
 from blockutils.logging import get_logger
 
 from context import Superresolution
@@ -36,7 +36,7 @@ def test_get_max_min():
     ]
     transform = from_origin(1470996, 6914001, 10.0, 10.0)
 
-    test_img, _ = SyntheticImage(40, 40, 4, "uint16", test_dir, 32640).create(
+    test_img, _ = FakeGeoImage(40, 40, 4, "uint16", test_dir, 32640).create(
         seed=45, transform=transform, band_desc=valid_desc
     )
     # dsr = rasterio.open(test_img)
@@ -68,7 +68,7 @@ def test_to_xy():
     ]
     transform = from_origin(1470996, 6914001, 10.0, 10.0)
 
-    test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir, 32640).create(
+    test_img, _ = FakeGeoImage(20, 18, 4, "uint16", test_dir, 32640).create(
         seed=45, transform=transform, band_desc=valid_desc
     )
     # dsr = rasterio.open(test_img)
@@ -92,7 +92,7 @@ def test_get_utm():
     ]
     transform = from_origin(1470996, 6914001, 10.0, 10.0)
 
-    test_img, _ = SyntheticImage(40, 40, 4, "uint16", test_dir, 32640).create(
+    test_img, _ = FakeGeoImage(40, 40, 4, "uint16", test_dir, 32640).create(
         seed=45, transform=transform, band_desc=valid_desc
     )
 
@@ -126,7 +126,7 @@ def test_area_of_interest():
     ]
     transform = from_origin(1470996, 6914001, 10.0, 10.0)
 
-    test_img, _ = SyntheticImage(40, 40, 4, "uint16", test_dir, 32640).create(
+    test_img, _ = FakeGeoImage(40, 40, 4, "uint16", test_dir, 32640).create(
         seed=45, transform=transform, band_desc=valid_desc
     )
 
@@ -155,7 +155,7 @@ def test_validate_description():
     ]
     transform = from_origin(1470996, 6914001, 10.0, 10.0)
 
-    test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir).create(
+    test_img, _ = FakeGeoImage(20, 18, 4, "uint16", test_dir).create(
         seed=45, transform=transform, band_desc=valid_desc
     )
 
@@ -183,7 +183,7 @@ def test_get_band_short_name():
     ]
     transform = from_origin(1470996, 6914001, 10.0, 10.0)
 
-    test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir).create(
+    test_img, _ = FakeGeoImage(20, 18, 4, "uint16", test_dir).create(
         seed=45, transform=transform, band_desc=valid_desc
     )
 
@@ -216,7 +216,7 @@ def test_validate():
 
     transform = from_origin(1470996, 6914001, 10.0, 10.0)
 
-    test_img_10, _ = SyntheticImage(20, 18, 4, "uint16", test_dir).create(
+    test_img_10, _ = FakeGeoImage(20, 18, 4, "uint16", test_dir).create(
         seed=45, transform=transform, band_desc=valid_desc_10
     )
 
@@ -243,7 +243,7 @@ def test_data_final():
 
     transform = from_origin(1470996, 6914001, 10.0, 10.0)
 
-    test_img, _ = SyntheticImage(20, 18, 4, "uint16", test_dir).create(
+    test_img, _ = FakeGeoImage(20, 18, 4, "uint16", test_dir).create(
         seed=45, transform=transform, band_desc=valid_desc
     )
 

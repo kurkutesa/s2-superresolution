@@ -17,3 +17,4 @@ pytest-mypy
 mock
 black
 coverage-badge
+fake-geo-images
