@@ -3,32 +3,27 @@ End-to-end test: Fetches data, creates output, stores it in /tmp and checks if o
 is valid.
 """
 from pathlib import Path
-import os
-import subprocess
 
 import geojson
 import rasterio
 
-from blockutils.logging import get_logger
-
-logger = get_logger(__name__)
+from blockutils.e2e import E2ETest
 
 # WARNING
 # THIS E2E TEST WILL ONLY WORK IN GPU ENABLED MACHINES
-def assert_e2e(test_dir):
+
+# Disable unused params for assert
+# pylint: disable=unused-argument
+def asserts(input_dir: Path, output_dir: Path, quicklook_dir: Path, logger):
     # Print out bbox of one tile
-    geojson_path = test_dir / "output" / "data.json"
+    geojson_path = output_dir / "data.json"
 
     with open(str(geojson_path)) as f:
         feature_collection = geojson.load(f)
 
     logger.info(feature_collection.features[0].bbox)
 
-    output = (
-        test_dir
-        / "output"
-        / Path(feature_collection.features[0].properties["up42.data_path"])
-    )
+    output = output_dir / feature_collection.features[0].properties["up42.data_path"]
 
     logger.info(output)
 
@@ -56,41 +51,18 @@ def assert_e2e(test_dir):
         assert output_image.crs.to_dict() == crs_exm
 
 
-def setup(testname):
-    test_dir = Path("/tmp") / testname
-    test_dir.mkdir(parents=True, exist_ok=True)
-    input_dir = test_dir / "input"
-    files_to_delete = Path(test_dir / "output").glob("*")
-    for file_path in files_to_delete:
-        file_path.unlink()
-
-    # Prepare input data
-    if not os.path.isdir(input_dir):
-        input_dir.mkdir(parents=True, exist_ok=True)
-        os.system(
-            "gsutil -m cp -r gs://floss-blocks-e2e-testing/e2e_s2_superresolution/* %s"
-            % input_dir
-        )
-
-    run_cmd = (
-        """docker run -v %s:/tmp \
-                 -e 'UP42_TASK_PARAMETERS={"bbox": [12.211, 52.291, 12.212, 52.290], "clip_to_aoi": true, \
-                 "copy_original_bands": false}' \
-                 -it s2-superresolution"""
-        % test_dir
-    )
-
-    return run_cmd, test_dir
-
-
 if __name__ == "__main__":
-    TESTNAME = "e2e_s2-superresolution"
-    RUN_CMD, TEST_DIR = setup(TESTNAME)
-
-    RETURN_CODE = subprocess.run(  # pylint: disable=subprocess-run-check
-        RUN_CMD, shell=True
-    ).returncode
-    logger.info(f"Out code is {str(RETURN_CODE)}")
-    assert RETURN_CODE == 0
-
-    assert_e2e(TEST_DIR)
+    e2e = E2ETest("s2-superresolution")
+    if not e2e.in_ci:
+        e2e.add_parameters(
+            {
+                "bbox": [12.211, 52.291, 12.212, 52.290],
+                "clip_to_aoi": True,
+                "copy_original_bands": False,
+            }
+        )
+        e2e.add_gs_bucket("gs://floss-blocks-e2e-testing/e2e_s2_superresolution/*")
+        e2e.asserts = asserts
+        e2e.run()
+    else:
+        print("Skipping test...")

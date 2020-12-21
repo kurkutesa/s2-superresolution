@@ -16,8 +16,8 @@ import shutil
 import argparse
 import subprocess
 
-from e2e import assert_e2e
 from blockutils.logging import get_logger
+from e2e import asserts
 
 logger = get_logger(__name__)
 
@@ -125,4 +125,4 @@ if __name__ == "__main__":
     print("Exited with code %r" % DOCKER_POPEN.poll())
     assert DOCKER_POPEN.poll() == 0
 
-    assert_e2e(TEST_DIR)
+    asserts(TEST_DIR / "input", TEST_DIR / "output", TEST_DIR / "quicklooks", logger)
