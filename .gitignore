@@ -8,3 +8,6 @@ __pycache__
 .coverage
 .ropeproject
 log*.txt
+
+# vscode files
+settings.json
