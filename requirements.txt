@@ -1,5 +1,5 @@
 up42-blockutils
-tensorflow>=2.3.*
+tensorflow==2.3.0
 keras
 numpy
 rasterio

@@ -13,7 +13,7 @@ WORKDIR /block
 COPY requirements.txt /block
 
 # Install the Python requirements.
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt --use-feature=2020-resolver
 
 # Copy the code into the container.
 COPY src /block/src
